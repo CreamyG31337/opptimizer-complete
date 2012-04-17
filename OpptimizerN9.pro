@@ -12,3 +12,9 @@ OTHER_FILES += \
 SUBDIRS += \
     OptUI \
     OptDaemon
+
+contains(MEEGO_EDITION,harmattan) {
+    target2.path = /etc/init/apps
+    target2.files += qtc_packaging/debian_harmattan/opptimizer-daemon.conf
+    INSTALLS += target2
+}
