@@ -32,3 +32,6 @@ _ReSharper*/
 OptDaemon/Makefile
 OptDaemon/OptDaemon
 OptUI/Makefile
+debian/*
+debian/opptimizern9.aegis
+OptUI/OptUI

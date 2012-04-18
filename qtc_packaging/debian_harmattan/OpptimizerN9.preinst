@@ -1,4 +1,3 @@
 #! /bin/sh
-cp *.ko /lib/modules/2.6.32.48-dfl61-20115101/
 stop apps/OptDaemon
 exit 0
