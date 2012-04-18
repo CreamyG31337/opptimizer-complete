@@ -15,26 +15,26 @@ QString OpptimizerUtils::applySettings(int reqFreq, int reqVolt, bool SREnable, 
     reqStr = QString::number(newFreq);
     qDebug() << reqStr;
     QFile file("/proc/opptimizer");
-    QFile file2("/sys/power/sr_vdd1_autocomp");
+    //QFile file2("/sys/power/sr_vdd1_autocomp");
     if (! file.open(QIODevice::WriteOnly | QIODevice::Text)){
         qDebug() << "OPP file open failed!!";
         qDebug() << file.errorString();
         return file.errorString();
     }
-    if (! file2.open(QIODevice::WriteOnly | QIODevice::Text)){
-        qDebug() << "SR file open failed!!";
-        qDebug() << file2.errorString();
-        return file.errorString();
-    }
+//    if (! file2.open(QIODevice::WriteOnly | QIODevice::Text)){
+//        qDebug() << "SR file open failed!!";
+//        qDebug() << file2.errorString();
+//        return file2.errorString();
+//    }
     if (changeVolt){
         reqStr += " " + QString::number(reqVolt);
     }
 
     QTextStream out(&file);
-    QTextStream out2(&file2);
-    QString srStr;
-    srStr = SREnable ? 1 : 0;
-    out2 << srStr;
+//    QTextStream out2(&file2);
+//    QString srStr;
+//    srStr = SREnable ? 1 : 0;
+//    out2 << srStr;
     out << reqStr;
     file.close();
     return "Voltage & Frequency Updated";

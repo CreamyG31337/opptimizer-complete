@@ -34,11 +34,12 @@ Page{
                  height: swOCEnabled.height
                  verticalAlignment: Text.AlignVCenter
                  text: "Apply on Startup"
-                 enabled: false //not implemented
+
              }
              Switch {
                  id: swOCEnabled
-                 checked: objQSettings.getValue("/settings/OcOnStartup/enabled",true)
+                 checked: false //objQSettings.getValue("/settings/OcOnStartup/enabled",true)
+                 enabled: false //not implemented
                  onCheckedChanged:{//wow this crappy harmattan QML is missing both the pressed and clicked events and properties for switches.
                     if (!blockEvents.running) {//so we get to use this instead. (onChecked fires too early -- when the component is created)
                         objQSettings.setValue("/settings/OcOnStartup/enabled",swOCEnabled.checked)
@@ -89,6 +90,7 @@ Page{
             Switch {
                 id: swSmartReflex
                 checked: objQSettings.getValue("/settings/SmartReflex/enabled",true)
+                enabled: false
                 onCheckedChanged:{
                     if (!blockEvents.running) {
                         objQSettings.setValue("/settings/SmartReflex/enabled",swSmartReflex.checked)

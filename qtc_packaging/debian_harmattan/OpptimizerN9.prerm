@@ -1,0 +1,7 @@
+#! /bin/sh
+stop apps/OptDaemon
+/sbin/rmmod opptimizer
+/sbin/rmmod symsearch
+rm /lib/modules/2.6.32.48-dfl61-20115101/symsearch.ko
+rm /lib/modules/2.6.32.48-dfl61-20115101/opptimizer_n9.ko
+exit 0

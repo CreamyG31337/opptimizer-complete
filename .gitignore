@@ -27,3 +27,8 @@ obj/
 [Rr]elease*/
 _ReSharper*/
 [Tt]est[Rr]esult*
+*.deb
+*.Makefile
+OptDaemon/Makefile
+OptDaemon/OptDaemon
+OptUI/Makefile
