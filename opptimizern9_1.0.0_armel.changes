@@ -15,9 +15,9 @@ Changes:
  .
    * Initial Release
 Checksums-Sha1: 
- 0cb52872b9b263ddcaf2f59b4070ef3da5dbd01e 45554 opptimizern9_1.0.0_armel.deb
+ 4a175c1464b03a99455e1fa4380c57dd1705143d 46988 opptimizern9_1.0.0_armel.deb
 Checksums-Sha256: 
- 99ccebe84a086113dc9913b3c3ce1f864636193d813b8acb06350dff15560c1b 45554 opptimizern9_1.0.0_armel.deb
+ 13d614007553fc97a67aad9be01f7e8675333bf1762a4ca8c23ace6e5ffe47db 46988 opptimizern9_1.0.0_armel.deb
 Files: 
- 6782122d68b35f2da4fe64778fbb7f33 45554 user/other optional opptimizern9_1.0.0_armel.deb
+ ef2d2ad3528ad79337012d00cab860b3 46988 user/other optional opptimizern9_1.0.0_armel.deb
 Maemo-Display-Name: OpptimizerN9

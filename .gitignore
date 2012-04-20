@@ -35,3 +35,4 @@ OptUI/Makefile
 debian/*
 debian/opptimizern9.aegis
 OptUI/OptUI
+OptUI/moc/*
