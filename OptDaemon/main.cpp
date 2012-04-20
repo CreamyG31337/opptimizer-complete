@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     QProcess p;
     QString strOutput;
     QString strError;
-    p.start("/sbin/insmod /lib/modules/2.6.32.48-dfl61-20115101/symsearch.ko");
+    p.start("/sbin/modprobe symsearch");
     p.waitForFinished(-1);
     strOutput = p.readAllStandardOutput();
     strError = p.readAllStandardError();
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     //else
         //lastOPPtimizerStatus = strOutput;
     //handle error
-    p.start("/sbin/insmod /lib/modules/2.6.32.48-dfl61-20115101/opptimizer_n9.ko");
+    p.start("/sbin/modprobe opptimizer_n9");
     p.waitForFinished(-1);
     strOutput = p.readAllStandardOutput();
     strError = p.readAllStandardError();
