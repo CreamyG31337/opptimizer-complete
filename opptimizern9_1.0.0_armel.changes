@@ -1,0 +1,23 @@
+Format: 1.8
+Date: Mon, 16 Apr 2012 21:22:16 -0600
+Source: opptimizern9
+Binary: opptimizern9
+Architecture: armel
+Version: 1.0.0
+Distribution: unstable
+Urgency: low
+Maintainer: Lance Colton <lance.colton@gmail.com>
+Changed-By: unknown <>
+Description: 
+ opptimizern9 - Overclock your N9
+Changes: 
+ opptimizern9 (1.0.0) unstable; urgency=low
+ .
+   * Initial Release
+Checksums-Sha1: 
+ 0cb52872b9b263ddcaf2f59b4070ef3da5dbd01e 45554 opptimizern9_1.0.0_armel.deb
+Checksums-Sha256: 
+ 99ccebe84a086113dc9913b3c3ce1f864636193d813b8acb06350dff15560c1b 45554 opptimizern9_1.0.0_armel.deb
+Files: 
+ 6782122d68b35f2da4fe64778fbb7f33 45554 user/other optional opptimizern9_1.0.0_armel.deb
+Maemo-Display-Name: OpptimizerN9

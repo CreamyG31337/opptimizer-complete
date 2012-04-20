@@ -8,3 +8,6 @@ OTHER_FILES +=
 
 SOURCES += \
     main.cpp
+
+HEADERS += \
+    main.h

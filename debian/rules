@@ -12,12 +12,10 @@
 
 
 
-
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# qmake PREFIX=/usr# Uncomment this line for use without Qt Creator
-
 	touch configure-stamp
 
 
@@ -25,7 +23,6 @@ build: build-stamp
 
 build-stamp: configure-stamp  
 	dh_testdir
-
 	# Add here commands to compile the package.
 	# $(MAKE) # Uncomment this line for use without Qt Creator
 	#docbook-to-man debian/opptimizern9.sgml > opptimizern9.1
