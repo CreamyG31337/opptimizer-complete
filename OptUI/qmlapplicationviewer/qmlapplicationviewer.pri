@@ -134,6 +134,7 @@ symbian {
     }
 
     target.path = $${installPrefix}/bin
+
     export(target.path)
     INSTALLS += target
 }

@@ -23,19 +23,33 @@
 #include <QFile>
 
 
+class OpptimizerLog : public QObject
+{
+    Q_OBJECT
+
+signals:
+    void newLogInfo(const QVariant &LogText);
+};
+
 class OpptimizerUtils : public QObject
 {
     Q_OBJECT
 public:
     Q_INVOKABLE QString getModuleVersion();
     Q_INVOKABLE QString getMaxVoltage();
+    Q_INVOKABLE QString getDefaultVoltage();
     Q_INVOKABLE QString getSmartReflexStatus();
+    Q_INVOKABLE void setSmartReflexStatus(bool newStatus);
     Q_INVOKABLE QString getMaxFreq();
     Q_INVOKABLE void refreshStatus();
+    Q_INVOKABLE QString returnRawSettings();
     Q_INVOKABLE QString applySettings(int reqFreq, int reqVolt, bool SREnable, bool changeVolt);
+    Q_INVOKABLE int testSettings(int testLength);
 private:
     QString lastOPPtimizerStatus;
     QString lastSmartReflexStatus;
+signals:
+    void newLogInfo(const QVariant &LogText);
 };
 
 //annoying wrapper class for qsettings

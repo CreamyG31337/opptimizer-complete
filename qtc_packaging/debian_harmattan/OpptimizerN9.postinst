@@ -1,4 +1,4 @@
 #! /bin/sh
-/sbin/depmod -a
-start apps/OptDaemon
+#/sbin/depmod -a
+#start apps/OptDaemon
 exit 0

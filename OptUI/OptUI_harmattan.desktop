@@ -4,7 +4,7 @@ Version=1.0
 Type=Application
 Terminal=false
 Name=OptUI
-Exec=/usr/bin/invoker --type=d -s /opt/OptUI/bin/OptUI
+Exec=/usr/bin/invoker --type=d -s /opt/opptimizer/optui
 Icon=/usr/share/icons/hicolor/80x80/apps/OptUI80.png
 X-Window-Icon=
 X-HildonDesk-ShowInToolbar=true

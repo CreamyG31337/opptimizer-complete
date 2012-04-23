@@ -1,4 +1,4 @@
-Source: opptimizern9
+Source: opptimizer-ui
 Section: user/other
 Priority: optional
 Maintainer: Lance Colton <lance.colton@gmail.com>
@@ -6,9 +6,9 @@ Build-Depends: debhelper (>= 5), libqt4-dev
 Standards-Version: 3.7.3
 Homepage: http://www.appcheck.net
 
-Package: opptimizern9
+Package: opptimizer-ui
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, opptimizer
 Description: Overclock your N9
- This package contains both the UI and kernel modules
+ This package contains the UI. The kernel modules are a different package.
 XSBC-Maemo-Display-Name: OpptimizerN9

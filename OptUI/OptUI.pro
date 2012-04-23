@@ -38,3 +38,8 @@ qtcAddDeployment()
 
 HEADERS += \
     main.h
+
+
+#target.path = /opt/opptimizer
+#INSTALLS = target
+#TARGET = optui

@@ -1,6 +1,7 @@
 #include <QtGui/QApplication>
 #include "qmlapplicationviewer.h"
 #include "main.h"
+#include <QtCore/qmath.h>
 
 MySettings::MySettings():
     qsettInternal(new QSettings("/home/user/.config/FakeCompany/OPPtimizer.conf",QSettings::NativeFormat,this))
@@ -13,31 +14,79 @@ QString OpptimizerUtils::applySettings(int reqFreq, int reqVolt, bool SREnable, 
     unsigned long newFreq = reqFreq * 1000 * 1000;
     QString reqStr;
     reqStr = QString::number(newFreq);
-    qDebug() << reqStr;
+
     QFile file("/proc/opptimizer");
-    //QFile file2("/sys/power/sr_vdd1_autocomp");
+
     if (! file.open(QIODevice::WriteOnly | QIODevice::Text)){
         qDebug() << "OPP file open failed!!";
         qDebug() << file.errorString();
         return file.errorString();
     }
-//    if (! file2.open(QIODevice::WriteOnly | QIODevice::Text)){
-//        qDebug() << "SR file open failed!!";
-//        qDebug() << file2.errorString();
-//        return file2.errorString();
-//    }
+
     if (changeVolt){
         reqStr += " " + QString::number(reqVolt);
     }
 
     QTextStream out(&file);
-//    QTextStream out2(&file2);
-//    QString srStr;
-//    srStr = SREnable ? 1 : 0;
-//    out2 << srStr;
+
+    qDebug() << reqStr;
     out << reqStr;
     file.close();
-    return "Voltage & Frequency Updated";
+    if (changeVolt)
+        return "Voltage & Frequency Updated";
+    else
+        return "Frequency Updated";
+}
+
+int OpptimizerUtils::testSettings(int testLength)
+{//adapted from http://shootout.alioth.debian.org/u32/program.php?test=mandelbrot&lang=gcc&id=2
+
+    QDateTime startTime = QDateTime::currentDateTime();
+
+    int w, h, bit_num = 0;
+    char byte_acc = 0;
+    int i, iter = 50;
+    double x, y, limit = 2.0;
+    double Zr, Zi, Cr, Ci, Tr, Ti;
+    FILE *output;
+    output = fopen("/home/user/MyDocs/test.pbm", "w");
+
+    w = h = testLength;
+
+    fprintf(output,"P4\n%d %d\n",w,h);
+
+    for(y=0;y<h;++y)
+    {
+        qDebug() << y;
+        if ((int)y % 100 == 0) // try to avoid force close dialog by going back to UI every 100 iterations
+            qApp->processEvents();
+        for(x=0;x<w;++x){
+            Zr = Zi = Tr = Ti = 0.0;
+            Cr = (2.0*x/w - 1.5); Ci=(2.0*y/h - 1.0);
+            for (i=0;i<iter && (Tr+Ti <= limit*limit);++i){
+                Zi = 2.0*Zr*Zi + Ci;
+                Zr = Tr - Ti + Cr;
+                Tr = Zr * Zr;
+                Ti = Zi * Zi;
+            }
+            byte_acc <<= 1;
+            if(Tr+Ti <= limit*limit) byte_acc |= 0x01;
+            ++bit_num;
+            if(bit_num == 8){
+                putc(byte_acc,output);
+                byte_acc = 0;
+                bit_num = 0;
+            }
+            else if(x == w-1){
+                byte_acc <<= (8-w%8);
+                putc(byte_acc,output);
+                byte_acc = 0;
+                bit_num = 0;
+            }
+        }
+    }
+    fclose(output);
+    return QDateTime::currentDateTime().secsTo(startTime) * -1;
 }
 
 void OpptimizerUtils::refreshStatus(){
@@ -50,8 +99,26 @@ void OpptimizerUtils::refreshStatus(){
     strError = p.readAllStandardError();
     qDebug() << strOutput;
     qDebug() << strError;
-    if (strError.length() > 1)
-        lastOPPtimizerStatus = "ERROR";
+    if (strError.length() > 1){
+        qDebug() << strError;
+        if(strError.contains("No such file or directory")){
+            //module not loaded, try starting it
+            qDebug() << "trying to start module...";
+            QProcess processModule;
+            processModule.start("/opt/opptimizer/oppldr");
+            processModule.waitForFinished(-1);
+            p.start("cat /proc/opptimizer");
+            p.waitForFinished(-1);
+            strOutput = p.readAllStandardOutput();
+            strError = p.readAllStandardError();
+            if (strError.length() > 1){
+                lastOPPtimizerStatus = "ERROR";
+                qDebug() << "failed to start module!";
+            }
+            else
+                lastOPPtimizerStatus = strOutput;
+        }
+    }
     else
         lastOPPtimizerStatus = strOutput;
 
@@ -68,6 +135,16 @@ void OpptimizerUtils::refreshStatus(){
         lastSmartReflexStatus = "ERROR";
     else
         lastSmartReflexStatus = strOutput2;
+
+    emit newLogInfo(lastOPPtimizerStatus);
+}
+
+QString OpptimizerUtils::returnRawSettings()
+{
+    if (lastOPPtimizerStatus.length() > 1)
+        return lastOPPtimizerStatus;
+    else
+        return "UNKNOWN";
 }
 
 QString OpptimizerUtils::getModuleVersion(){
@@ -87,7 +164,20 @@ QString OpptimizerUtils::getMaxVoltage(){
     if(lastOPPtimizerStatus == "ERROR")
         return "ERR";
 
-    QRegExp rx("u_volt_dyn_nominal:\\s+(\\d+)");
+    QRegExp rx("vdata->u_volt_dyn_nominal:\\s+(\\d+)");
+    int pos = rx.indexIn(lastOPPtimizerStatus);
+    if (pos > -1) {
+        return rx.cap(1);
+    }
+    else
+        return "Unknown";
+}
+
+QString OpptimizerUtils::getDefaultVoltage(){
+    if(lastOPPtimizerStatus == "ERROR")
+        return "ERR";
+
+    QRegExp rx("Default_vdata->u_volt_dyn_nominal:\\s+(\\d+)");
     int pos = rx.indexIn(lastOPPtimizerStatus);
     if (pos > -1) {
         return rx.cap(1);
@@ -105,6 +195,21 @@ QString OpptimizerUtils::getSmartReflexStatus(){
         return "Off";
     return "Unknown";
 }
+
+void OpptimizerUtils::setSmartReflexStatus(bool newStatus){
+    QString reqStr = newStatus ? "1" : "0";
+    qDebug() << "setting sr to " + reqStr;
+    QFile file("/sys/power/sr_vdd1_autocomp");
+    if (! file.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "/sys/power/sr_vdd1_autocomp open failed!!";
+        //qDebug() << file.errorString();
+        //return file.errorString(); // this will never fail anyways. probably :)
+    }
+    QTextStream out(&file);
+    out << reqStr;
+    file.close();
+}
+
 
 QString OpptimizerUtils::getMaxFreq(){
     if(lastOPPtimizerStatus == "ERROR")
@@ -126,11 +231,20 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
 
     MySettings objSettings;
     OpptimizerUtils objOpptimizerUtils;
+    OpptimizerLog objOpptimizerLog;
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
     QmlApplicationViewer viewer;
     viewer.rootContext()->setContextProperty("objQSettings",&objSettings);
     viewer.rootContext()->setContextProperty("objOpptimizerUtils",&objOpptimizerUtils);
+
+    qmlRegisterType<OpptimizerLog>("net.appcheck.Opptimizer", 1, 0, "OpptimizerLog");
+
+    viewer.rootContext()->setContextProperty("objOpptimizerLog",&objOpptimizerLog);
+
+    QObject::connect(&objOpptimizerUtils, SIGNAL(newLogInfo(QVariant)),
+           &objOpptimizerLog, SIGNAL(newLogInfo(QVariant)));
+
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
     viewer.setMainQmlFile(QCoreApplication::applicationDirPath() +
                 QLatin1String("/../qml/OptUI/main.qml"));
