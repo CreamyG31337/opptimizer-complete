@@ -113,6 +113,9 @@ void OpptimizerUtils::refreshStatus(){
     QProcess p;
     QString strOutput;
     QString strError;
+    QFile file("/proc/opptimizer");
+    if (! file.open(QIODevice::ReadOnly | QIODevice::Text))
+
     p.start("cat /proc/opptimizer");
     p.waitForFinished(-1);
     strOutput = p.readAllStandardOutput();
@@ -184,14 +187,20 @@ QString OpptimizerUtils::getMaxVoltage(){
     if(lastOPPtimizerStatus == "ERROR")
         return "ERR";
 
-    QRegExp rx1("vdata->u_volt_dyn_nominal:\\s+(\\d+)");
+    QRegExp rx1("vdata->u_volt_calib:\\s+(\\d+)");
     QRegExp rx2("vdata->u_volt_dyn_nominal:\\s+(\\d+)");
 
-    int pos = rx.indexIn(lastOPPtimizerStatus);
-    if (pos > -1) {
-        return rx.cap(1);
+    int pos1 = rx1.indexIn(lastOPPtimizerStatus);
+    if (pos1 > -1) {
+        QString uvCalibStr = rx1.cap(1);
+        long long uvCalibInt = uvCalibStr.toLongLong();
+        if (uvCalibInt != 0)
+            return rx1.cap(1);
+        int pos2 = rx2.indexIn(lastOPPtimizerStatus);
+        if (pos2 > -1){
+            return rx2.cap(1);
+        }
     }
-    else
         return "Unknown";
 }
 
