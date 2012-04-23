@@ -3,7 +3,7 @@
     <credential name="UID::user" />
     <credential name="GID::users" />
     <credential name="CAP::dac_override" />
-    <for path="/opt/opptimizer/optui" />
+    <for path="/opt/opptimizer/bin/optui" />
   </request>
   <!-- DISABLED
       <request policy="set trust-zone">
@@ -11,11 +11,13 @@
         <credential name="GID::root" />
         <credential name="tcb" />
         <credential name="CAP::sys_module" />
-        <for path="/opt/OptDaemon/bin/OptDaemon" />
+        <for path="/opt/opptimizer/bin/OptDaemon" />
       </request>
+
    -->
       <request policy="set">
         <credential name="CAP::dac_override" />
         <for path="applauncherd-launcher::/usr/bin/applauncherd.bin" id="" />
       </request>
+
 </aegis>

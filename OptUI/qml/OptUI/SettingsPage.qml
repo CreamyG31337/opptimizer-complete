@@ -26,7 +26,7 @@ Page{
     function applySettings(){
         var strStatus;
         objOpptimizerUtils.setSmartReflexStatus(swSmartReflex.checked);
-        strStatus = objOpptimizerUtils.applySettings(cbFreq.value, cbVolts.value, null, null);
+        strStatus = objOpptimizerUtils.applySettings(cbFreq.value, cbVolts.value, swSmartReflex.checked, swCustomVolts.checked);
         if (strStatus.indexOf("Updated") === -1){//some sort of error
             if (strStatus.indexOf("Permission denied") > -1)
                 strStatus = "Permission error - Please reinstall this package using /usr/sbin/incept."

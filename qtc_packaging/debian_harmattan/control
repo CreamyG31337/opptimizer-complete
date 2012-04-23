@@ -1,5 +1,6 @@
 Source: opptimizer-ui
-Section: user/other
+Section: utils
+XB-Maemo-Flags: visible
 Priority: optional
 Maintainer: Lance Colton <lance.colton@gmail.com>
 Build-Depends: debhelper (>= 5), libqt4-dev

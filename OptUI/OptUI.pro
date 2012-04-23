@@ -1,9 +1,7 @@
-
-#INSTALLS = target
-#TARGET = optui
+TARGET = opptimizer
 
 # Add more folders to ship with the application, here
-folder_01.source = qml/OptUI
+folder_01.source = qml/optui
 folder_01.target = qml
 DEPLOYMENTFOLDERS = folder_01
 
@@ -42,6 +40,5 @@ qtcAddDeployment()
 
 HEADERS += \
     main.h
-
-target.path = /opt/opptimizer
-
+TARGET = optui
+target.path = /opt/opptimizer/bin

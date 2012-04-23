@@ -111,7 +111,7 @@ Page {
         anchors.top: btnRefresh.bottom
         anchors.topMargin: 25
         anchors.left: parent.left
-        text: "Show Raw Output"
+        text: "Show raw output"
 
     }
 

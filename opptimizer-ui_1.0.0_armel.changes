@@ -7,7 +7,7 @@ Version: 1.0.0
 Distribution: unstable
 Urgency: low
 Maintainer: Lance Colton <lance.colton@gmail.com>
-Changed-By: unknown <>
+Changed-By: Lance Colton <lance.colton@gmail.com>
 Description: 
  opptimizer-ui - Overclock your N9
 Changes: 
@@ -15,9 +15,9 @@ Changes:
  .
    * Initial Release
 Checksums-Sha1: 
- fbe689a9d9e6e151f6ec5848aab5d13ab4322621 39476 opptimizer-ui_1.0.0_armel.deb
+ 7fca377e91f0237b4454dbcef9488a14910bf51e 38920 opptimizer-ui_1.0.0_armel.deb
 Checksums-Sha256: 
- cbc59dced9034ccc2628cb99e8d0a262990dc22b3626707280c79b430bba217f 39476 opptimizer-ui_1.0.0_armel.deb
+ eb32dff76e7dc25a97b0149be16ab2f321d9f14bd8a67c7d300964b8e1b4baaf 38920 opptimizer-ui_1.0.0_armel.deb
 Files: 
- de474e853f3894e648703db1fa4f79c1 39476 user/other optional opptimizer-ui_1.0.0_armel.deb
+ 43e36c1c1909932f2fb95b5ed250444b 38920 utils optional opptimizer-ui_1.0.0_armel.deb
 Maemo-Display-Name: OpptimizerN9
