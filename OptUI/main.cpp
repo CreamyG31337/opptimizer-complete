@@ -69,7 +69,8 @@ int OpptimizerUtils::testSettings(int testLength)
     double x, y, limit = 2.0;
     double Zr, Zi, Cr, Ci, Tr, Ti;
     FILE *output;
-    output = fopen("/home/user/MyDocs/test.pbm", "w");
+    //output = fopen("/home/user/MyDocs/test.pbm", "w");
+    output = fopen("/dev/null", "w");
 
     w = h = testLength;
 
@@ -110,54 +111,25 @@ int OpptimizerUtils::testSettings(int testLength)
 }
 
 void OpptimizerUtils::refreshStatus(){
-    QProcess p;
-    QString strOutput;
-    QString strError;
-    QFile file("/proc/opptimizer");
-    if (! file.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (!QFileInfo("/proc/opptimizer").exists()){
+        QProcess processModule;
+        processModule.start("/opt/opptimizer/bin/oppldr");
+        processModule.waitForFinished(-1);
+    }
 
-    p.start("cat /proc/opptimizer");
-    p.waitForFinished(-1);
-    strOutput = p.readAllStandardOutput();
-    strError = p.readAllStandardError();
-    qDebug() << strOutput;
-    qDebug() << strError;
-    if (strError.length() > 1){
-        qDebug() << strError;
-        if(strError.contains("No such file or directory")){
-            //module not loaded, try starting it
-            qDebug() << "trying to start module...";
-            QProcess processModule;
-            processModule.start("/opt/opptimizer/bin/oppldr");
-            processModule.waitForFinished(-1);
-            p.start("cat /proc/opptimizer");
-            p.waitForFinished(-1);
-            strOutput = p.readAllStandardOutput();
-            strError = p.readAllStandardError();
-            if (strError.length() > 1){
-                lastOPPtimizerStatus = "ERROR";
-                qDebug() << "failed to start module!";
-            }
-            else
-                lastOPPtimizerStatus = strOutput;
-        }
+    QFile file("/proc/opptimizer");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        lastOPPtimizerStatus = "ERROR";
     }
     else
-        lastOPPtimizerStatus = strOutput;
+        lastOPPtimizerStatus = file.readAll();
 
-    QProcess p2;
-    QString strOutput2;
-    QString strError2;
-    p2.start("cat /sys/power/sr_vdd1_autocomp");
-    p2.waitForFinished(-1);
-    strOutput2 = p2.readAllStandardOutput();
-    strError2 = p2.readAllStandardError();
-    qDebug() << strOutput2;
-    qDebug() << strError2;
-    if (strError2.length() > 1)
+    QFile file2("/sys/power/sr_vdd1_autocomp");
+    if (!file2.open(QIODevice::ReadOnly | QIODevice::Text)){
         lastSmartReflexStatus = "ERROR";
+    }
     else
-        lastSmartReflexStatus = strOutput2;
+        lastSmartReflexStatus = file2.readAll();
 
     emit newLogInfo(lastOPPtimizerStatus);
 }
@@ -208,12 +180,20 @@ QString OpptimizerUtils::getDefaultVoltage(){
     if(lastOPPtimizerStatus == "ERROR")
         return "ERR";
 
-    QRegExp rx("Default_vdata->u_volt_dyn_nominal:\\s+(\\d+)");
-    int pos = rx.indexIn(lastOPPtimizerStatus);
-    if (pos > -1) {
-        return rx.cap(1);
+    QRegExp rx1("Default_vdata->u_volt_calib:\\s+(\\d+)");
+    QRegExp rx2("Default_vdata->u_volt_dyn_nominal:\\s+(\\d+)");
+
+    int pos1 = rx1.indexIn(lastOPPtimizerStatus);
+    if (pos1 > -1) {
+        QString uvCalibStr = rx1.cap(1);
+        long long uvCalibInt = uvCalibStr.toLongLong();
+        if (uvCalibInt != 0)
+            return rx1.cap(1);
+        int pos2 = rx2.indexIn(lastOPPtimizerStatus);
+        if (pos2 > -1){
+            return rx2.cap(1);
+        }
     }
-    else
         return "Unknown";
 }
 

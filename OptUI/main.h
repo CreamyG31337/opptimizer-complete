@@ -21,6 +21,7 @@
 #include <QStack>
 #include <QMap>
 #include <QFile>
+#include <QFileInfo>
 
 
 class OpptimizerLog : public QObject

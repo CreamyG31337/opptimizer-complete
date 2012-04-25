@@ -19,20 +19,59 @@ Page{
         }
     }
     tools: noTools
+
+    Label{
+        id: lblirc
+        text: "visit #inception\nirc.freenode.net"
+        anchors.topMargin: 20
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    Label{
+        id: lblDonate
+        anchors.left: parent.left
+        anchors.right: parent.right
+        text: "OPPtimizer is free and open source software, but please show your support by donating if you are able."
+        anchors.topMargin: 20
+        anchors.top: lblirc.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    Label{
+        id: lblLinkDonate
+        text: "Donate"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: lblDonate.bottom
+        font.underline: true
+        color: "steelblue"
+        MouseArea{
+            anchors.fill: parent
+            onClicked: {
+                myBusyInd.running = true;
+                myBusyInd.visible = true;
+                Qt.openUrlExternally("https://www.wepay.com/donations/n9-apps-by-creamy-goodness")
+                thisIsDumb.start();
+            }
+        }
+    }
+
+
     Label{
         id: lblVersion
-        text: "OPPtimizer version 1.0.0"
-        anchors.verticalCenter: parent.verticalCenter
+        text: "OPPtimizer version 1.0.0\nCreated by Lance Colton"
+        anchors.top: lblLinkDonate.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 20
+        anchors.topMargin: 30
+        color: "orange"
     }
 
     Label{
         id: lblLinkOPPtimizer
-        text: "latest version / more info"
+        text: "Latest version / More info"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.topMargin: 20
-        anchors.top: lblVersion.bottom
+        anchors.top: lblVersion.bottom        
         font.underline: true
         color: "steelblue"
         MouseArea{
@@ -48,12 +87,22 @@ Page{
 
     Label{
         id: lblDisclaimer
-        anchors.top: lblLinkOPPtimizer.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        text: "Using this application may void your device warranty\n"
-             +"Even a small overclock can reduce the life of the hardware\n"
-             +"You have nobody to blame but yourself if this happens\n"
+        anchors.topMargin: 20
+        anchors.top: lblLinkOPPtimizer.bottom
+        color: "red"
+        text: "Using this application may void your device warranty. Even a small overclock can reduce the life of the hardware. You have nobody to blame but yourself if this happens"
+    }
+
+    Label{
+        id: lblThanks
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.topMargin: 20
+        anchors.top: lblDisclaimer.bottom
+        color: "green"
+        text: "Additional thanks to Jeffrey Kawika Patricio, Tiago Sousa, Skrilax_CZ, itsnotabigtruck"
     }
 
     BusyIndicator{
