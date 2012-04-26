@@ -28,5 +28,4 @@ PageStackWindow {
             horizontalAlignment: Text.AlignHCenter
         }
     }
-
 }

@@ -112,9 +112,11 @@ int OpptimizerUtils::testSettings(int testLength)
 
 void OpptimizerUtils::refreshStatus(){
     if (!QFileInfo("/proc/opptimizer").exists()){
-        QProcess processModule;
-        processModule.start("/opt/opptimizer/bin/oppldr");
-        processModule.waitForFinished(-1);
+        if(!QProcess::execute("/opt/opptimizer/bin/oppldr")){
+            lastOPPtimizerStatus = "FAILED TO EXECUTE LOADER";
+            emit newLogInfo(lastOPPtimizerStatus);
+            return;
+        }
     }
 
     QFile file("/proc/opptimizer");

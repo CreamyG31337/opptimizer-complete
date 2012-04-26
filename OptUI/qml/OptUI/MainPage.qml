@@ -2,6 +2,7 @@ import QtQuick 1.1
 import com.nokia.meego 1.0
 
 Page {
+    id: mainPage
     anchors.fill: parent
     tools: commonTools
     Header {
@@ -22,10 +23,10 @@ Page {
          ButtonRow {
              style: TabButtonStyle { }
              TabButton {
-                 tab: tabStatus
+                 tab: statusPage
                  text: "Status"
                  onClicked: {
-                     tabStatus.refresh();
+                     statusPage.refresh();
                  }
              }
              TabButton {
@@ -41,11 +42,11 @@ Page {
      }
     TabGroup {
         id: tabGroup
-        currentTab: tabStatus
+        currentTab: statusPage
         anchors.fill: parent
         // define the content for tab 1
         StatusPage {
-            id: tabStatus
+            id: statusPage
             anchors { fill: tabGroup;}
             anchors.topMargin: 72
         }
@@ -65,5 +66,10 @@ Page {
             MenuItem { text: qsTr("Invert Colors"); onClicked: { theme.inverted = !theme.inverted; objQSettings.setValue("/settings/THEME/inverted", theme.inverted)}}
             MenuItem { text: qsTr("About OPPtimizer"); onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))}
         }
+    }
+
+    function whatthefuck(){
+        //the question is WHY can't I just call this directly...
+        settingsPage.startApply();
     }
 }

@@ -4,7 +4,12 @@ import com.nokia.meego 1.0
 import com.nokia.extras 1.0
 
 Page{
+    id: settingsPage
     anchors.margins: UiConstants.DefaultMargin
+
+    property bool dangerVolts
+    property bool dangerFreq
+
     BusyIndicator{
         id: myBusyInd
         platformStyle: BusyIndicatorStyle { size: "large" }
@@ -21,6 +26,14 @@ Page{
         sliderFreq.value = objQSettings.getValue("/settings/CPUFreq/value",1000);
         sliderVolts.value = objQSettings.getValue("/settings/CPUVolts/value",1350000);
         sliderTest.value = objQSettings.getValue("/settings/TestLength/value",3000)
+    }
+
+    function startApply(){
+        infoMessageBanner.text = "Applying settings, please wait...";
+        infoMessageBanner.timerShowTime = 1500
+        infoMessageBanner.show();
+        pauseAndApply.start();
+        objQSettings.setValue("/settings/TestLength/value",sliderTest.value)
     }
 
     function applySettings(){
@@ -188,6 +201,7 @@ Page{
             }
             anchors.topMargin: 20
             text: "Frequency (MHz): "
+            color: dangerFreq ? "red" : lblApplyOnStartup.color
         }
         CountBubble{
             id: cbFreq
@@ -197,14 +211,17 @@ Page{
             value: sliderFreq.value
             largeSized: true
             onValueChanged: {
-                if (!blockEvents.running){
+                //if (!blockEvents.running)
+
                     if (value >= 1200){
-                        lblFreq.color = "red"
+                        dangerFreq = true;
+                        //lblFreq.color = "red"
                     }
                     else{
-                        lblFreq.color = lblApplyOnStartup.color
+                        dangerFreq = false;
+                        //lblFreq.color = lblApplyOnStartup.color
                     }
-                }
+
             }
         }
 
@@ -228,6 +245,7 @@ Page{
                 left: parent.left
             }
             text: "Voltage (μV): "
+            color: dangerVolts ? "red" : lblApplyOnStartup.color
         }
 
         CountBubble{
@@ -238,14 +256,16 @@ Page{
             largeSized: true
             enabled: swCustomVolts.checked
             onValueChanged: {
-                if (!blockEvents.running){
+                //if (!blockEvents.running){
                     if (value >= 1387500){
-                        lblOCVolts.color = "red"
+                        dangerVolts = true;
+                        //lblOCVolts.color = "red"
                     }
                     else{
-                        lblOCVolts.color = lblApplyOnStartup.color
+                        dangerVolts = false;
+                        //lblOCVolts.color = lblApplyOnStartup.color
                     }
-                }
+                //}
             }
         }
 
@@ -258,7 +278,7 @@ Page{
                 right: parent.right
             }
             minimumValue: 1000000
-            maximumValue: 1387500
+            maximumValue: 1425000
             value: objQSettings.getValue("/settings/CPUVolts/value",1375000)
             stepSize: 12500
          }
@@ -271,11 +291,15 @@ Page{
             width: 200
             anchors.topMargin: 25
             onClicked: {
-                infoMessageBanner.text = "Applying settings, please wait...";
-                infoMessageBanner.timerShowTime = 1500
-                infoMessageBanner.show();
-                pauseAndApply.start();
-                objQSettings.setValue("/settings/TestLength/value",sliderTest.value)
+                var warningmessage = "";
+                if (dangerVolts){ warningmessage += "Voltage"; }
+                if (warningmessage != "") warningmessage += " & ";
+                if (dangerFreq) warningmessage += "Frequency";
+                if (warningmessage != "")
+                    appWindow.pageStack.push(Qt.resolvedUrl("Warning.qml"),
+                                              {warnings: warningmessage})
+                else
+                    startApply();
             }
             style: NegativeButtonStyle {}
         }
