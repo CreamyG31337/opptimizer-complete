@@ -35,19 +35,17 @@ signals:
 class RenderThread : public QThread
 {
     Q_OBJECT
-
 public:
     RenderThread(QObject *parent = 0);
     ~RenderThread();
-
     void render(double testLength);
-
+public slots:
+    void abortRender();
 signals:
     void renderedImage(int timeWasted);
-
+    void updateStatus(int val);
 protected:
     void run();
-
 private:
     QMutex mutex;
     QWaitCondition condition;
@@ -70,8 +68,7 @@ public:
     Q_INVOKABLE QString returnRawSettings();
     Q_INVOKABLE QString applySettings(int reqFreq, int reqVolt, bool SREnable, bool changeVolt);
     Q_INVOKABLE void testSettings(int testLength);
-//public  slots:
-//  void renderedImageIn(int timeWasted);
+    Q_INVOKABLE void stopBenchmark();
 private:
     QString lastOPPtimizerStatus;
     QString lastSmartReflexStatus;
@@ -79,7 +76,7 @@ private:
 signals:
     void newLogInfo(const QVariant &LogText);
     void renderedImageOut(int timeWasted);
-
+    void testStatus(int val);
 };
 
 //annoying wrapper class for qsettings

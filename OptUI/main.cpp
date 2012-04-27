@@ -41,6 +41,8 @@ QString OpptimizerUtils::applySettings(int reqFreq, int reqVolt, bool SREnable, 
 OpptimizerUtils::OpptimizerUtils(QObject *parent){
     QObject::connect(&thread, SIGNAL(renderedImage(int)),
            this, SIGNAL(renderedImageOut(int)));
+    QObject::connect(&thread, SIGNAL(updateStatus(int)),
+           this, SIGNAL(testStatus(int)));
 }
 
 void OpptimizerUtils::testSettings(int testLength)
@@ -48,10 +50,10 @@ void OpptimizerUtils::testSettings(int testLength)
     thread.render(testLength);
 }
 
-//void OpptimizerUtils::renderedImageIn(int timeWasted)
-//{
-//    emit renderedImageOut(timeWasted);
-//}
+void OpptimizerUtils::stopBenchmark()
+{
+    thread.abortRender();
+}
 
 void OpptimizerUtils::refreshStatus(){
     if (!QFileInfo("/proc/opptimizer").exists()){
@@ -196,8 +198,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
 
     qmlRegisterType<OpptimizerLog>("net.appcheck.Opptimizer", 1, 0, "OpptimizerLog");
     viewer.rootContext()->setContextProperty("objOpptimizerLog",&objOpptimizerLog);
-//    qmlRegisterType<OpptimizerLog>("net.appcheck.Opptimizer", 1, 0, "OpptimizerLog");
-//    viewer.rootContext()->setContextProperty("objOpptimizerLog",&objOpptimizerLog);
 
     QObject::connect(&objOpptimizerUtils, SIGNAL(newLogInfo(QVariant)),
            &objOpptimizerLog, SIGNAL(newLogInfo(QVariant)));
@@ -230,10 +230,18 @@ void RenderThread::render(double testLength)
 {
     QMutexLocker locker(&mutex);
     this->testLength = testLength;
+    this->abort = false;
 
     if (!isRunning()) {
         start(NormalPriority);//low is too low to stress cpu
     }
+}
+
+void RenderThread::abortRender()
+{
+    mutex.lock();
+    this->abort = true;
+    mutex.unlock();
 }
 
 void RenderThread::run()
@@ -280,9 +288,13 @@ void RenderThread::run()
 
     for(y=0;y<h;++y)
     {
-        qDebug() << y;
         if (abort)
             return;
+        if ((int)y % 50 == 0){
+            emit updateStatus((int)y);
+            qDebug() << y;
+        }
+
         for(x=0;x<w;++x){
             Zr = Zi = Tr = Ti = 0.0;
             Cr = (2.0*x/w - 1.5); Ci=(2.0*y/h - 1.0);
@@ -309,7 +321,8 @@ void RenderThread::run()
         }
     }
     fclose(output);
-    emit renderedImage(QDateTime::currentDateTime().secsTo(startTime) * -1);
+    int timeWasted = QDateTime::currentDateTime().secsTo(startTime) * -1;
+    emit renderedImage(timeWasted);
 
     mutex.lock();
     mutex.unlock();

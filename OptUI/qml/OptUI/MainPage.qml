@@ -67,22 +67,7 @@ Page {
             MenuItem { text: qsTr("About OPPtimizer"); onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))}
         }
     }
-    Rectangle {
-        z: 99
-        id: overlayBenchmarking
-        anchors.fill: parent
-        color: "#60000000"
-        visible: false
-        Label {
-            anchors.centerIn: parent
-            width: parent.width
-            text: "Testing"
-            font.pixelSize: 70
-            font.bold: true
-            color: "white"
-            horizontalAlignment: Text.AlignHCenter
-        }
-    }
+
     function whatthefuck(){
         //the question is WHY can't I just call this directly...
         settingsPage.startApply();

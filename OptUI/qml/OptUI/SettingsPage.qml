@@ -30,6 +30,7 @@ Page{
     }
 
     function startApply(){
+        overlayBlocker.visible = true;
         infoMessageBanner.text = "Applying settings, please wait...";
         infoMessageBanner.timerShowTime = 1500
         infoMessageBanner.show();
@@ -54,12 +55,10 @@ Page{
             infoMessageBanner.timerShowTime = 9000
             infoMessageBanner.text = strStatus;
             infoMessageBanner.show();
+            overlayBlocker.visible = false;
         }
         else{
             infoMessageBanner.hide();
-//            infoMessageBanner.timerShowTime = 2000
-//            infoMessageBanner.text = "Testing, please wait...";
-//            infoMessageBanner.show();
             testAndSave.start();
         }
     }
@@ -71,9 +70,12 @@ Page{
     }
 
     function testAndSaveSettings(){
+        overlayBlocker.visible = false;
         lblLastTestTime.visible = true;
         cbLastTest.visible = true;
-        cbLastTest.value = objOpptimizerUtils.testSettings(sliderTest.value); //this branches to a new thread
+        testProgress.maximumValue = sliderTest.value;
+        testProgress.value = 0;
+        objOpptimizerUtils.testSettings(sliderTest.value); //this branches to a new thread
         overlayBenchmarking.visible = true
     }
 
@@ -83,12 +85,11 @@ Page{
         topMargin: 10
     }
 
-
-
     Connections {
         target: objOpptimizerUtils
         onRenderedImageOut: {
             overlayBenchmarking.visible = false
+            cbLastTest.value = timeWasted
             infoMessageBanner.text = "Testing completed. Saving...";
             infoMessageBanner.show();
             objQSettings.setValue("/settings/CPUVolts/value",sliderVolts.value)
