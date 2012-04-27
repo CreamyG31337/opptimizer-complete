@@ -6,6 +6,7 @@ import com.nokia.extras 1.0
 Page{
     id: settingsPage
     anchors.margins: UiConstants.DefaultMargin
+    anchors.fill: parent
 
     property bool dangerVolts
     property bool dangerFreq
@@ -36,6 +37,12 @@ Page{
         objQSettings.setValue("/settings/TestLength/value",sliderTest.value)
     }
 
+    Timer {
+        id: pauseAndApply
+        interval: 1500; running: false; repeat: false
+        onTriggered: applySettings();
+    }
+
     function applySettings(){
         var strStatus;
         objOpptimizerUtils.setSmartReflexStatus(swSmartReflex.checked);
@@ -50,42 +57,50 @@ Page{
         }
         else{
             infoMessageBanner.hide();
-            infoMessageBanner.timerShowTime = 2000
-            infoMessageBanner.text = "Testing, please wait...";
-            infoMessageBanner.show();
+//            infoMessageBanner.timerShowTime = 2000
+//            infoMessageBanner.text = "Testing, please wait...";
+//            infoMessageBanner.show();
             testAndSave.start();
         }
-    }
-
-    function testAndSaveSettings(){
-        lblLastTestTime.visible = true;
-        cbLastTest.visible = true;
-        cbLastTest.value = objOpptimizerUtils.testSettings(sliderTest.value); //this should really start a new thread but it doesn't yet
-        infoMessageBanner.hide();
-        infoMessageBanner.timerShowTime = 3000
-        infoMessageBanner.text = "Testing completed. Saving...";
-        infoMessageBanner.show();
-        objQSettings.setValue("/settings/CPUVolts/value",sliderVolts.value)
-        objQSettings.setValue("/settings/CPUFreq/value",sliderFreq.value)
-        objQSettings.setValue("/settings/SmartReflex/enabled",swSmartReflex.checked)
-        objQSettings.setValue("/settings/CustomVolts/enabled",swCustomVolts.checked)
-    }
-
-    Timer {
-        id: blockEvents
-        interval: 200; running: true; repeat: false
-    }
-
-    Timer {
-        id: pauseAndApply
-        interval: 1500; running: false; repeat: false
-        onTriggered: applySettings();
     }
 
     Timer {
         id: testAndSave
         interval: 2000; running: false; repeat: false
         onTriggered: testAndSaveSettings()
+    }
+
+    function testAndSaveSettings(){
+        lblLastTestTime.visible = true;
+        cbLastTest.visible = true;
+        cbLastTest.value = objOpptimizerUtils.testSettings(sliderTest.value); //this branches to a new thread
+        overlayBenchmarking.visible = true
+    }
+
+    InfoBanner{
+        id: infoMessageBanner
+        z: 99
+        topMargin: 10
+    }
+
+
+
+    Connections {
+        target: objOpptimizerUtils
+        onRenderedImageOut: {
+            overlayBenchmarking.visible = false
+            infoMessageBanner.text = "Testing completed. Saving...";
+            infoMessageBanner.show();
+            objQSettings.setValue("/settings/CPUVolts/value",sliderVolts.value)
+            objQSettings.setValue("/settings/CPUFreq/value",sliderFreq.value)
+            objQSettings.setValue("/settings/SmartReflex/enabled",swSmartReflex.checked)
+            objQSettings.setValue("/settings/CustomVolts/enabled",swCustomVolts.checked)
+        }
+    }
+
+    Timer {
+        id: blockEvents
+        interval: 200; running: true; repeat: false
     }
 
     ScrollDecorator {
@@ -352,9 +367,4 @@ Page{
             visible: false
         }
     }//flickable
-    InfoBanner{
-        id: infoMessageBanner
-        z: 99
-        topMargin: 10
-    }
 }//page

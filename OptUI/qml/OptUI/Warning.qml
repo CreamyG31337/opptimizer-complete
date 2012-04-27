@@ -24,7 +24,7 @@ Page{
 
     Label {
         id: txtWarning
-        text: "The " + warnings + " selected is dangerously high!!"
+        text: "The " + warnings + " selected is dangerously high!"
         color: "red"
         width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter

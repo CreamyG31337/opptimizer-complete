@@ -32,10 +32,34 @@ signals:
     void newLogInfo(const QVariant &LogText);
 };
 
+class RenderThread : public QThread
+{
+    Q_OBJECT
+
+public:
+    RenderThread(QObject *parent = 0);
+    ~RenderThread();
+
+    void render(double testLength);
+
+signals:
+    void renderedImage(int timeWasted);
+
+protected:
+    void run();
+
+private:
+    QMutex mutex;
+    QWaitCondition condition;
+    bool abort;
+    double testLength;
+};
+
 class OpptimizerUtils : public QObject
 {
     Q_OBJECT
 public:
+    OpptimizerUtils(QObject *parent = 0);
     Q_INVOKABLE QString getModuleVersion();
     Q_INVOKABLE QString getMaxVoltage();
     Q_INVOKABLE QString getDefaultVoltage();
@@ -45,12 +69,17 @@ public:
     Q_INVOKABLE void refreshStatus();
     Q_INVOKABLE QString returnRawSettings();
     Q_INVOKABLE QString applySettings(int reqFreq, int reqVolt, bool SREnable, bool changeVolt);
-    Q_INVOKABLE int testSettings(int testLength);
+    Q_INVOKABLE void testSettings(int testLength);
+//public  slots:
+//  void renderedImageIn(int timeWasted);
 private:
     QString lastOPPtimizerStatus;
     QString lastSmartReflexStatus;
+    RenderThread thread;
 signals:
     void newLogInfo(const QVariant &LogText);
+    void renderedImageOut(int timeWasted);
+
 };
 
 //annoying wrapper class for qsettings
