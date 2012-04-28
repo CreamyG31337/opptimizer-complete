@@ -24,26 +24,34 @@ Page{
     Label{
         id: lblirc
         text: "visit #inception\nirc.freenode.net"
-        anchors.topMargin: 20
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors{
+            topMargin: 20
+            top: parent.top
+            horizontalCenter: parent.horizontalCenter
+        }
+        horizontalAlignment: Text.AlignHCenter
     }
 
     Label{
         id: lblDonate
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors{
+            left: parent.left
+            right: parent.right
+            topMargin: 20
+            top: lblirc.bottom
+            horizontalCenter: parent.horizontalCenter
+        }
         text: "OPPtimizer is free and open source software, but please show your support by donating if you are able."
-        anchors.topMargin: 20
-        anchors.top: lblirc.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
+        horizontalAlignment: Text.AlignJustify
     }
 
     Label{
         id: lblLinkDonate
-        text: "Donate"
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: lblDonate.bottom
+        text: "WePay"
+        anchors{
+            right: parent.horizontalCenter
+            top: lblDonate.bottom
+        }
         font.underline: true
         color: "steelblue"
         MouseArea{
@@ -57,22 +65,44 @@ Page{
         }
     }
 
+    Label{
+        id: lblLinkDonate2
+        text: "PayPal"
+        anchors.leftMargin: 10
+        anchors.left: lblLinkDonate.right
+        anchors.top: lblDonate.bottom
+        font.underline: true
+        color: "steelblue"
+        MouseArea{
+            anchors.fill: parent
+            onClicked: {
+                myBusyInd.running = true;
+                myBusyInd.visible = true;
+                Qt.openUrlExternally("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=creamygoodness31337%40hotmail%2ecom&lc=CA&item_name=Creamy%20Goodness%20N9%20Apps&currency_code=CAD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted")
+                thisIsDumb.start();
+            }
+        }
+    }
 
     Label{
         id: lblVersion
         text: "OPPtimizer version 1.0.0\nCreated by Lance Colton"
-        anchors.top: lblLinkDonate.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 30
+        anchors{
+            top: lblLinkDonate.bottom
+            horizontalCenter: parent.horizontalCenter
+            topMargin: 30
+        }
         color: "orange"
     }
 
     Label{
         id: lblLinkOPPtimizer
         text: "Latest version / More info"
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 20
-        anchors.top: lblVersion.bottom        
+        anchors{
+            horizontalCenter: parent.horizontalCenter
+            topMargin: 20
+            top: lblVersion.bottom
+        }
         font.underline: true
         color: "steelblue"
         MouseArea{
@@ -88,22 +118,28 @@ Page{
 
     Label{
         id: lblDisclaimer
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.topMargin: 20
-        anchors.top: lblLinkOPPtimizer.bottom
+        anchors{
+            left: parent.left
+            right: parent.right
+            topMargin: 20
+            top: lblLinkOPPtimizer.bottom
+        }
         color: "red"
+        horizontalAlignment: Text.AlignJustify
         text: "Using this application may void your device warranty. Even a small overclock can reduce the life of the hardware. You have nobody to blame but yourself if this happens"
     }
 
     Label{
         id: lblThanks
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.topMargin: 20
-        anchors.top: lblDisclaimer.bottom
+        anchors{
+            left: parent.left
+            right: parent.right
+            topMargin: 20
+            top: lblDisclaimer.bottom
+        }
         color: "green"
-        text: "Additional thanks to Jeffrey Kawika Patricio, Tiago Sousa, Skrilax_CZ, itsnotabigtruck"
+        horizontalAlignment: Text.AlignHCenter
+        text: "Additional thanks to @tekahuna, Tiago Sousa, Skrilax_CZ, itsnotabigtruck"
     }
 
     BusyIndicator{

@@ -46,12 +46,14 @@ PageStackWindow {
         ProgressBar {
             z:99
             id: testProgress
-            anchors.top: parent.verticalCenter
+            anchors{
+                top: parent.verticalCenter
+                horizontalCenter: parent.horizontalCenter
+            }
             minimumValue: 0
             maximumValue: 1000
             value: 0
             width: parent.width - 60
-            anchors.horizontalCenter: parent.horizontalCenter
         }
         Rectangle {
             z: 90
@@ -59,8 +61,10 @@ PageStackWindow {
             color: "#D0000000"
             Label {
                 id: lblTesting
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.verticalCenter
+                anchors{
+                    horizontalCenter: parent.horizontalCenter
+                    bottom: parent.verticalCenter
+                }
                 width: parent.width
                 text: "Testing"
                 font.pixelSize: 70
@@ -73,9 +77,11 @@ PageStackWindow {
             }
             Button {
                 id: btnAbortTest
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Stop Test"
+                anchors{
+                    bottom: parent.bottom
+                    horizontalCenter: parent.horizontalCenter
+                }
+                text: "Stop test"
                 width: parent.width
                 height: parent.height / 3
                 onClicked: {

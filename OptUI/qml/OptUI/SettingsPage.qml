@@ -182,10 +182,10 @@ Page{
         Row {
             id: rowSR
             anchors{
-            topMargin: 10
-            top: rowCustomVoltage.bottom
-            right: parent.right
-            left: parent.left
+                topMargin: 10
+                top: rowCustomVoltage.bottom
+                right: parent.right
+                left: parent.left
             }
             Label {
                 width: rowSR.width - rowSR.spacing - swSmartReflex.width
@@ -214,16 +214,18 @@ Page{
             anchors{
                 top: rowSR.bottom
                 left: parent.left
+                topMargin: 20
             }
-            anchors.topMargin: 20
-            text: "Frequency (MHz): "
+            text: "Frequency (MHz)"
             color: dangerFreq ? "red" : lblApplyOnStartup.color
         }
         CountBubble{
             id: cbFreq
-            anchors.right: parent.right
-            anchors.verticalCenter: lblFreq.verticalCenter
-            anchors.topMargin: 20
+            anchors{
+                right: parent.right
+                verticalCenter: lblFreq.verticalCenter
+                topMargin: 20
+            }
             value: sliderFreq.value
             largeSized: true
             onValueChanged: {
@@ -259,29 +261,28 @@ Page{
             anchors{
                 top: sliderFreq.bottom
                 left: parent.left
+                topMargin: 20
             }
-            text: "Voltage (μV): "
+            text: "Voltage (μV)"
             color: dangerVolts ? "red" : lblApplyOnStartup.color
         }
 
         CountBubble{
             id: cbVolts
-            anchors.right: parent.right
-            anchors.verticalCenter: lblOCVolts.verticalCenter
+            anchors{
+                right: parent.right
+                verticalCenter: lblOCVolts.verticalCenter
+            }
             value: sliderVolts.value
             largeSized: true
             enabled: swCustomVolts.checked
             onValueChanged: {
-                //if (!blockEvents.running){
-                    if (value >= 1387500){
-                        dangerVolts = true;
-                        //lblOCVolts.color = "red"
-                    }
-                    else{
-                        dangerVolts = false;
-                        //lblOCVolts.color = lblApplyOnStartup.color
-                    }
-                //}
+                if (value >= 1387500){
+                    dangerVolts = true;
+                }
+                else{
+                    dangerVolts = false;
+                }
             }
         }
 
@@ -301,8 +302,10 @@ Page{
 
         Button{
             id: btnApply
-            anchors.top: sliderVolts.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors{
+                top: sliderVolts.bottom
+                horizontalCenter: parent.horizontalCenter
+            }
             text: "OPPtimize!"
             width: 200
             anchors.topMargin: 25
@@ -325,15 +328,17 @@ Page{
             anchors{
                 top: btnApply.bottom
                 left: parent.left
+                topMargin: 35
             }
-            anchors.topMargin: 25
-            text: "Test iterations: "
+            text: "Test iterations"
         }
 
         CountBubble{
             id: cbTest
-            anchors.right: parent.right
-            anchors.verticalCenter: lblTestLength.verticalCenter
+            anchors{
+                right: parent.right
+                verticalCenter: lblTestLength.verticalCenter
+            }
             value: sliderTest.value
             largeSized: true
         }
@@ -356,13 +361,15 @@ Page{
                 top: sliderTest.bottom
                 left: parent.left
             }
-            text: "Completed in "
+            text: "Completed in"
             visible: false
         }
         CountBubble{
             id: cbLastTest
-            anchors.right: parent.right
-            anchors.verticalCenter: lblLastTestTime.verticalCenter
+            anchors{
+                right: parent.right
+                verticalCenter: lblLastTestTime.verticalCenter
+            }
             value: 0
             largeSized: true
             visible: false

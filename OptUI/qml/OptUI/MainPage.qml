@@ -47,15 +47,18 @@ Page {
         // define the content for tab 1
         StatusPage {
             id: statusPage
-            anchors { fill: tabGroup;}
-            anchors.topMargin: 72
+            anchors {
+                fill: tabGroup
+                topMargin: 72
+            }
         }
         // define the content for tab 2
         SettingsPage {
             id: settingsPage
-            anchors { fill: tabGroup;}
-            anchors.topMargin: 72
-
+            anchors {
+                fill: tabGroup
+                topMargin: 72
+            }
         }
     }
     Menu {

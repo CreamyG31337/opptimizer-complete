@@ -3,7 +3,7 @@ Encoding=UTF-8
 Version=1.0
 Type=Application
 Terminal=false
-Name=OptUI
+Name=OppUI
 Exec=/usr/bin/invoker --type=d -s /opt/opptimizer/bin/optui
 Icon=/usr/share/icons/hicolor/80x80/apps/opptimizer80.png
 X-Window-Icon=

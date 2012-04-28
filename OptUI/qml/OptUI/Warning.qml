@@ -24,7 +24,7 @@ Page{
 
     Label {
         id: txtWarning
-        text: "The " + warnings + " selected is dangerously high!"
+        text: "The " + warnings + " selected may be dangerously high!"
         color: "red"
         width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter
@@ -33,11 +33,13 @@ Page{
 
     Button{
         id: btnConfirm
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
+        anchors{
+            horizontalCenter: parent.horizontalCenter
+            verticalCenter: parent.verticalCenter
+            topMargin: 25
+        }
         text: "OPPtimize!"
         width: 170
-        anchors.topMargin: 25
         onClicked: {
             pageStack.pop(mainPage);
             appWindow.pageStack.currentPage.whatthefuck();
@@ -47,16 +49,18 @@ Page{
 
     Button{
         id: btnCancel
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors{
+            topMargin: 25
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+        }
         text: "Cancel"
         height: parent.height / 3
-        anchors.topMargin: 25
         onClicked: {
             appWindow.pageStack.pop(mainPage);
         }
-        style: PositiveButtonStyle {}
+       // style: PositiveButtonStyle {} //i don't like green cancel buttons
     }
     tools: noTools
 }

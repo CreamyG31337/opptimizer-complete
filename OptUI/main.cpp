@@ -218,10 +218,10 @@ RenderThread::RenderThread(QObject *parent)
 
 RenderThread::~RenderThread()
 {
-    mutex.lock();
+  //  mutex.lock();
     abort = true;
-    condition.wakeOne();
-    mutex.unlock();
+    //condition.wakeOne();
+  //  mutex.unlock();
 
     wait();
 }
@@ -239,16 +239,16 @@ void RenderThread::render(double testLength)
 
 void RenderThread::abortRender()
 {
-    mutex.lock();
+ //   mutex.lock();
     this->abort = true;
-    mutex.unlock();
+ //   mutex.unlock();
 }
 
 void RenderThread::run()
 {
-    mutex.lock();
+ //   mutex.lock();
     double testLength = this->testLength;
-    mutex.unlock();
+ //   mutex.unlock();
 
     //this function is adapted from http://shootout.alioth.debian.org/u32/program.php?test=mandelbrot&lang=gcc&id=2
     /*
@@ -324,7 +324,7 @@ void RenderThread::run()
     int timeWasted = QDateTime::currentDateTime().secsTo(startTime) * -1;
     emit renderedImage(timeWasted);
 
-    mutex.lock();
-    mutex.unlock();
+ //   mutex.lock();
+ //   mutex.unlock();
 }
 
