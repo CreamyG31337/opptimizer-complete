@@ -1,3 +1,8 @@
+opptimizer-ui (1.0.1) unstable; urgency=low
+  * Fixed < 1000mhz "max speed" on status screen showing an extra digit
+
+ -- Lance Colton <lance.colton@gmail.com>  Thu, 3 May 2012 00:37:00 -0600
+
 opptimizer-ui (1.0.0) unstable; urgency=low
   * Initial Release
 

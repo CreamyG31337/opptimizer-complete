@@ -93,7 +93,7 @@ QString OpptimizerUtils::getModuleVersion(){
     if(lastOPPtimizerStatus == "ERROR")
         return "ERR";
 
-    QRegExp rx("\\Wv(\\d+\\.\\d+)");
+    QRegExp rx("\\Wv(\\d+(\\.\\d+)+)");
     int pos = rx.indexIn(lastOPPtimizerStatus);
     if (pos > -1) {
         return rx.cap(1);
@@ -173,7 +173,7 @@ QString OpptimizerUtils::getMaxFreq(){
     if(lastOPPtimizerStatus == "ERROR")
         return "ERR";
 
-    QRegExp rx("opp rate:\\s+(\\d\\d\\d\\d)");
+    QRegExp rx("opp rate:\\s+(1?\\d\\d\\d)");
     int pos = rx.indexIn(lastOPPtimizerStatus);
     if (pos > -1) {
         return QString::number(rx.cap(1).toInt());
