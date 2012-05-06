@@ -5,9 +5,34 @@ Page {
     id: mainPage
     anchors.fill: parent
     tools: commonTools
+    Component.onCompleted:{
+        if (headerSelectionDialog.selectedIndex == -1)
+            headerSelectionDialog.selectedIndex = 0;
+
+    }
+
     Header {
-      id: pageHeader
-      title: "OPPtimizer"
+        id: pageHeader
+        title: "OPPtimizer"
+    }
+    SelectionDialog {
+        id: headerSelectionDialog
+        titleText: "Choose Profile"
+        model: ListModel {
+            ListElement {name:"1"}
+            ListElement {name:"2"}
+            ListElement {name:"3"}
+            ListElement {name:"4"}
+            ListElement {name:"5"}
+        }
+        onAccepted: {
+            console.log(selectedIndex + 1);
+            pageHeader.title = "OPPtimizer: Profile " + (selectedIndex + 1);
+            settingsPage.fnBlockEvents();
+            settingsPage.selectedProfile = selectedIndex;
+            settingsPage.fixOCEnabled();
+            //pageStack.push(Qt.resolvedUrl("SettingsPage.qml"),{selectedProfile: selectedIndex})
+        }
     }
     ToolBarLayout {
          id: commonTools
@@ -27,11 +52,17 @@ Page {
                  text: "Status"
                  onClicked: {
                      statusPage.refresh();
+                     pageHeader.hideIt();
+                     pageHeader.title = "OPPtimizer"
                  }
              }
              TabButton {
                  tab: settingsPage
                  text: "Settings"
+                 onClicked: {
+                    pageHeader.showIt();
+                    pageHeader.title = "OPPtimizer: Profile " + (headerSelectionDialog.selectedIndex + 1);
+                 }
              }
          }
          ToolIcon {
@@ -65,12 +96,18 @@ Page {
         id: myMenu
         visualParent: pageStack
         MenuLayout {
-            MenuItem { text: qsTr("Reset Settings"); onClicked: {objQSettings.clear(); settingsPage.loadSettings();}}
+            MenuItem { text: qsTr("Reset Settings"); onClicked: {
+                    objQSettings.clear();
+                    settingsPage.loadSettings();
+                    var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
+                    db.transaction(function(tx) {
+                         tx.executeSql('DROP TABLE IF EXISTS History');
+                    })
+                }}
             MenuItem { text: qsTr("Invert Colors"); onClicked: { theme.inverted = !theme.inverted; objQSettings.setValue("/settings/THEME/inverted", theme.inverted)}}
             MenuItem { text: qsTr("About OPPtimizer"); onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))}
         }
     }
-
     function whatthefuck(){
         //the question is WHY can't I just call this directly...
         settingsPage.startApply();

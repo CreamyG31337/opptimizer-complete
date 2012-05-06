@@ -10,7 +10,12 @@ Rectangle {
   id: theHeader
   property alias title: titleText.text
   property alias titleColor: titleText.color
-
+  function showIt(){
+      filterImage.visible = true;
+  }
+  function hideIt(){
+      filterImage.visible = false;
+  }
   width: parent ? parent.width : 0
   height: 72
   z: 99
@@ -59,18 +64,17 @@ Rectangle {
     z: 99
   }
 
-//  ToolIcon {
-//    id: filterImage
-//    anchors.right: parent.right
-//    anchors.verticalCenter: parent.verticalCenter
-//    platformIconId: "icon-m-textinput-combobox-arrow"
-//  }
-
-//  MouseArea {
-//    anchors.fill: theHeader
-//    onClicked: { headerSelectionDialog.open() }
-//    onPressed: { theHeader.opacity = 0.8 }
-//    onReleased: { theHeader.opacity = 1 }
-//  }
-
+  ToolIcon {
+    id: filterImage
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    platformIconId: "icon-m-textinput-combobox-arrow"
+    visible: false
+    MouseArea {
+      anchors.fill: parent
+      onClicked: { headerSelectionDialog.open() }
+      onPressed: { theHeader.opacity = 0.8 }
+      onReleased: { theHeader.opacity = 1 }
+    }
+  }
 }

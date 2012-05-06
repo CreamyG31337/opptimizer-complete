@@ -10,6 +10,7 @@ Page{
 
     property bool dangerVolts
     property bool dangerFreq
+    property int selectedProfile: 0
 
     BusyIndicator{
         id: myBusyInd
@@ -20,18 +21,89 @@ Page{
         z: 50
     }
 
-    function loadSettings(){
-        swOCEnabled.checked = objQSettings.getValue("/settings/OcOnStartup/enabled",false);
-        swCustomVolts.checked = objQSettings.getValue("/settings/CustomVolts/enabled",false);
-        swSmartReflex.checked = objQSettings.getValue("/settings/SmartReflex/enabled",true);
-        sliderFreq.value = objQSettings.getValue("/settings/CPUFreq/value",1000);
-        sliderVolts.value = objQSettings.getValue("/settings/CPUVolts/value",1350000);
-        sliderTest.value = objQSettings.getValue("/settings/TestLength/value",3000)
+    function checkHistory(){
+        var ItersPassed = 0;
+        var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
+        db.transaction(function(tx) {
+            // Create the history database table if it doesn't already exist, composite key on freq/volt
+            tx.executeSql('CREATE TABLE IF NOT EXISTS History(Frequency INT, Voltage INT, IterationsPassed INT, SuspectedCrashes INT, PRIMARY KEY(Frequency, Voltage))');
+            var rs = tx.executeSql('SELECT IterationsPassed FROM History WHERE Frequency=? AND Voltage=?;', [sliderFreq.value, sliderVolts.value]);
+            if (rs.rows.length > 0){
+                ItersPassed = rs.rows.item(0).IterationsPassed;
+            }
+        })
+        console.debug("checkhistory finds iters passed: " + ItersPassed)
+        cbTestTotal.value = ItersPassed;
+    }
+
+    function fnBlockEvents(){
+        blockEvents.start();
+    }
+
+    function fixOCEnabled(){
+        fnBlockEvents()
+        if (cbTestTotal.value >= 15000){
+            swOCEnabled.enabled = true;
+            if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile))
+                swOCEnabled.checked = true;
+            console.debug("enabled oc on boot switch, checked = " + objQSettings.getValue("/settings/OcOnStartup/enabled",false) + objQSettings.getValue("/settings/OcOnStartup/profile",-1) + selectedProfile)
+
+        }
+        else{
+            //check for any frequency < selected with same voltage and 15k iters and 0 crashes, allow it
+            var MaxFreq = 0
+            var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
+            db.transaction(function(tx) {
+                var rs = tx.executeSql('SELECT MAX(Frequency) AS MAXFREQ FROM History WHERE Voltage=? AND IterationsPassed >= 15000 AND SuspectedCrashes = 0;', [sliderVolts.value]);
+                if (rs.rows.length > 0){
+                    MaxFreq = rs.rows.item(0).MAXFREQ
+                }
+            })
+            console.debug("found max freq of " + MaxFreq)
+            if (sliderFreq.value < MaxFreq){
+                swOCEnabled.enabled = true;
+                console.debug("enabled switch but left oc on boot as is")
+            }
+            else{
+                swOCEnabled.enabled = false;
+                swOCEnabled.checked = false;
+            }
+
+            console.debug("disabled oc on boot")
+        }
+        //this stuff doesn't seem to be needed due to the bindings updating fine
+//        if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1 === selectedProfile) )) {
+//            swOCEnabled.checked = true;
+//        }
+//        else{
+//            swOCEnabled.checked = false;
+//        }
+//        swCustomVolts.checked = objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false);
+//        swSmartReflex.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true);
+//        sliderFreq.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUFreq/value",1000);
+//        sliderVolts.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value",1350000);
+//        sliderTest.value = objQSettings.getValue("/settings/TestLength/value",3000);
+//        checkHistory();
     }
 
     function startApply(){
-        overlayBlocker.visible = true;
+        infoMessageBanner.topMargin = 10
         infoMessageBanner.text = "Applying settings, please wait...";
+        var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
+        db.transaction(function(tx) {
+            // Add row for this freq/volt combo if doesn't exist already
+            tx.executeSql('INSERT OR IGNORE INTO History VALUES(?,?,0,1);', [ sliderFreq.value, sliderVolts.value ]);//set suspected crashes to 1 for now
+            // Get existing iterations done
+//            var rs = tx.executeSql('SELECT IterationsPassed FROM History WHERE Frequency=? AND Voltage=?;', [ sliderFreq.value, sliderVolts.value ]);
+//            if (rs.rows.length > 0){//should have got 1 row
+//                // update row to add iterations just done
+//                totalIter = parseInt(rs.rows.item(0).IterationsPassed) + sliderTest.value //javascript + sqlite = shit.
+//                tx.executeSql('UPDATE History SET IterationsPassed=? WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
+//                console.debug("tried to update total iters from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
+//            }
+        })
+
+        overlayBlocker.visible = true;
         infoMessageBanner.timerShowTime = 1500
         infoMessageBanner.show();
         pauseAndApply.start();
@@ -56,6 +128,7 @@ Page{
             infoMessageBanner.text = strStatus;
             infoMessageBanner.show();
             overlayBlocker.visible = false;
+            //count as crash?
         }
         else{
             infoMessageBanner.hide();
@@ -83,7 +156,7 @@ Page{
         id: infoMessageBanner
         z: 99
         topMargin: 10
-    }
+    }    
 
     Connections {
         target: objOpptimizerUtils
@@ -92,10 +165,25 @@ Page{
             cbLastTest.value = timeWasted
             infoMessageBanner.text = "Testing completed. Saving...";
             infoMessageBanner.show();
-            objQSettings.setValue("/settings/CPUVolts/value",sliderVolts.value)
-            objQSettings.setValue("/settings/CPUFreq/value",sliderFreq.value)
-            objQSettings.setValue("/settings/SmartReflex/enabled",swSmartReflex.checked)
-            objQSettings.setValue("/settings/CustomVolts/enabled",swCustomVolts.checked)
+            objQSettings.setValue("/settings/" + selectedProfile + "/CPUVolts/value",sliderVolts.value)
+            objQSettings.setValue("/settings/" + selectedProfile + "/CPUFreq/value",sliderFreq.value)
+            objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex/enabled",swSmartReflex.checked)
+            objQSettings.setValue("/settings/" + selectedProfile + "/CustomVolts/enabled",swCustomVolts.checked)
+            var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
+            var totalIter = 0
+            db.transaction(function(tx) {
+                // Add row for this freq/volt combo if not exist already
+                //tx.executeSql('INSERT OR IGNORE INTO History VALUES(?,?,0,0);', [ sliderFreq.value, sliderVolts.value ]);
+                // Get existing iterations done
+                var rs = tx.executeSql('SELECT IterationsPassed FROM History WHERE Frequency=? AND Voltage=?;', [ sliderFreq.value, sliderVolts.value ]);
+                if (rs.rows.length > 0){//should have got 1 row
+                    // update row to add iterations just done
+                    totalIter = parseInt(rs.rows.item(0).IterationsPassed) + sliderTest.value //javascript + sqlite = shit.
+                    tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0, WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
+                    console.debug("tried to update total iters from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
+                }
+            })
+            cbTestTotal.value = totalIter;
         }
     }
 
@@ -113,36 +201,53 @@ Page{
         id: flickable
         anchors.fill: parent
         contentHeight: 700
-
         Row {
-             id: rowEnabled
-             anchors{
-                 topMargin: 10
-                 top: parent.top
-                 right: parent.right
-                 left: parent.left
-             }
-             Label {
-                 id: lblApplyOnStartup
-                 width: rowEnabled.width - rowEnabled.spacing - swOCEnabled.width
-                 height: swOCEnabled.height
-                 verticalAlignment: Text.AlignVCenter
-                 text: "Apply on startup"
-             }
-             Switch {
-                 id: swOCEnabled
-                 checked: false //objQSettings.getValue("/settings/OcOnStartup/enabled",true)
-                 enabled: false //not implemented
-                 onCheckedChanged:{//wow this crappy harmattan QML is missing both the pressed and clicked events and properties for switches.
-                    if (!blockEvents.running) {//so we get to use this instead. (onChecked fires too early -- when the component is created)
-                        objQSettings.setValue("/settings/OcOnStartup/enabled",swOCEnabled.checked)
-//                        if (swOCEnabled.checked){
-//                           infoMessageBanner.text =
-//                        }
+            id: rowEnabled
+                anchors{
+                topMargin: 10
+                top: parent.top
+                right: parent.right
+                left: parent.left
+            }
+            Label {
+                id: lblApplyOnStartup
+                width: rowEnabled.width - rowEnabled.spacing - swOCEnabled.width
+                height: swOCEnabled.height
+                verticalAlignment: Text.AlignVCenter
+                text: "Apply on startup"
+            }
+            Item{
+                width: swCustomVolts.width
+                height: swCustomVolts.height
+                MouseArea{
+                    z: 20
+                    anchors.fill: parent
+                    onClicked: {
+                        if (!swOCEnabled.enabled){
+                            infoMessageBanner.text = "15,000 test iterations are required to apply on startup";
+                            infoMessageBanner.show();
+                            infoMessageBanner.topMargin = 200
+                        }
+                        else
+                            swOCEnabled.checked = !swOCEnabled.checked
                     }
                 }
-             }
-         }
+                Switch {
+                    z: 15
+                    anchors.fill: parent
+                    id: swOCEnabled
+                    checked: false
+                    enabled: cbTestTotal.value >= 15000
+                    onCheckedChanged:{//wow this crappy harmattan QML is missing both the pressed and clicked events and properties for switches.
+                        if (!blockEvents.running) {//so we get to use this instead. (onChecked fires too early -- when the component is created)
+                            objQSettings.setValue("/settings/OcOnStartup/enabled",swOCEnabled.checked)
+                            //also add profile #
+                            objQSettings.setValue("/settings/OcOnStartup/profile", selectedProfile)
+                        }
+                    }
+                }
+            }
+        }
 
         Row {
              id: rowCustomVoltage
@@ -160,12 +265,12 @@ Page{
              }
              Switch {
                  id: swCustomVolts
-                 checked: objQSettings.getValue("/settings/CustomVolts/enabled",false)
+                 checked: objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false)
                  onCheckedChanged:{
                     if (!blockEvents.running) {
-                        objQSettings.setValue("/settings/CustomVolts/enabled",swCustomVolts.checked)
+                        objQSettings.setValue("/settings/" + selectedProfile + "/CustomVolts/enabled",swCustomVolts.checked)
                         if (swCustomVolts.checked){
-                            sliderVolts.value = objQSettings.getValue("/settings/CPUVolts/value",1350000);
+                            sliderVolts.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value",1350000);
                             infoMessageBanner.text = "SmartReflex will be blocked from further adjusting this voltage only";
                             infoMessageBanner.timerShowTime = 3000;
                             infoMessageBanner.show();
@@ -194,10 +299,10 @@ Page{
             }
             Switch {
                 id: swSmartReflex
-                checked: objQSettings.getValue("/settings/SmartReflex/enabled",true)
+                checked: objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true)
                 onCheckedChanged:{
                     if (!blockEvents.running) {
-                        objQSettings.setValue("/settings/SmartReflex/enabled",swSmartReflex.checked)
+                        objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex/enabled",swSmartReflex.checked)
                         objOpptimizerUtils.setSmartReflexStatus(swSmartReflex.checked);
                         if (!swSmartReflex.checked){
                             infoMessageBanner.text = "SmartReflex will be completely disabled for the CPU. The CPU will use quite a bit more power.";
@@ -229,17 +334,14 @@ Page{
             value: sliderFreq.value
             largeSized: true
             onValueChanged: {
-                //if (!blockEvents.running)
-
-                    if (value >= 1200){
-                        dangerFreq = true;
-                        //lblFreq.color = "red"
-                    }
-                    else{
-                        dangerFreq = false;
-                        //lblFreq.color = lblApplyOnStartup.color
-                    }
-
+                if (value >= 1200){
+                    dangerFreq = true;
+                }
+                else{
+                    dangerFreq = false;
+                }
+                checkHistory()
+                fixOCEnabled()
             }
         }
 
@@ -252,9 +354,9 @@ Page{
             }
             maximumValue: 1400
             minimumValue: 800
-            value: objQSettings.getValue("/settings/CPUFreq/value",1000)
+            value: objQSettings.getValue("/settings/" + selectedProfile + "/CPUFreq/value",1000)
             stepSize: 5
-         }
+        }
 
         Label {
             id: lblOCVolts
@@ -283,6 +385,8 @@ Page{
                 else{
                     dangerVolts = false;
                 }
+                checkHistory()
+                fixOCEnabled()
             }
         }
 
@@ -296,7 +400,7 @@ Page{
             }
             minimumValue: 1000000
             maximumValue: 1425000
-            value: objQSettings.getValue("/settings/CPUVolts/value",1375000)
+            value: objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value",1375000)
             stepSize: 12500
          }
 
@@ -324,29 +428,62 @@ Page{
         }
 
         Label {
-            id: lblTestLength
+            id: lblTestLength1
             anchors{
                 top: btnApply.bottom
                 left: parent.left
                 topMargin: 35
             }
-            text: "Test iterations"
+            text: "Do "
         }
 
         CountBubble{
             id: cbTest
             anchors{
-                right: parent.right
-                verticalCenter: lblTestLength.verticalCenter
+                left: lblTestLength1.right
+                verticalCenter: lblTestLength1.verticalCenter
             }
             value: sliderTest.value
             largeSized: true
         }
 
+        Label {
+            id: lblTestLength2
+            anchors{
+                top: btnApply.bottom
+                left: cbTest.right
+                topMargin: 35
+            }
+            text: " test iterations"
+        }
+
+        Label {
+            id: lblTestTotal
+            anchors{
+                top: btnApply.bottom
+                right: cbTestTotal.left
+                topMargin: 35
+            }
+            text: "Total "
+        }
+
+        CountBubble{
+            id: cbTestTotal
+            anchors{
+                right: parent.right
+                verticalCenter: lblTestLength1.verticalCenter
+            }
+            value: 0
+            largeSized: true
+            onValueChanged: {
+                fixOCEnabled()
+            }
+        }
+
         Slider {
             id: sliderTest
             anchors{
-                top: lblTestLength.bottom
+                top: lblTestLength1.bottom
                 left: parent.left
                 right: parent.right
             }

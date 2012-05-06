@@ -7,7 +7,7 @@ PageStackWindow {
     anchors.margins: UiConstants.DefaultMargin
     Component.onCompleted: {
         theme.inverted = objQSettings.getValue("/settings/THEME/inverted",true)
-        theme.colorScheme = "darkOrange"
+        theme.colorScheme = "darkOrange"        
     }
     MainPage {
         id: mainPage

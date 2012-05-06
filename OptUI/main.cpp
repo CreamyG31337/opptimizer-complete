@@ -292,7 +292,7 @@ void RenderThread::run()
             return;
         if ((int)y % 50 == 0){
             emit updateStatus((int)y);
-            qDebug() << y;
+            //qDebug() << y;
         }
 
         for(x=0;x<w;++x){
