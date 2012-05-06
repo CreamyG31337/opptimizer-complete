@@ -39,7 +39,7 @@ Page{
             right: parent.right
             topMargin: 20
             top: lblirc.bottom
-            horizontalCenter: parent.horizontalCenter
+//            horizontalCenter: parent.horizontalCenter
         }
         text: "OPPtimizer is free and open source software, but please show your support by donating if you are able."
         horizontalAlignment: Text.AlignJustify
@@ -86,7 +86,7 @@ Page{
 
     Label{
         id: lblVersion
-        text: "OPPtimizer version 1.0.0\nCreated by Lance Colton"
+        text: "OPPtimizer version 1.1.0\nCreated by Lance Colton"
         anchors{
             top: lblLinkDonate.bottom
             horizontalCenter: parent.horizontalCenter

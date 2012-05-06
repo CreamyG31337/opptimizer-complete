@@ -179,7 +179,7 @@ Page{
                 if (rs.rows.length > 0){//should have got 1 row
                     // update row to add iterations just done
                     totalIter = parseInt(rs.rows.item(0).IterationsPassed) + sliderTest.value //javascript + sqlite = shit.
-                    tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0, WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
+                    tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
                     console.debug("tried to update total iters from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
                 }
             })
@@ -460,9 +460,8 @@ Page{
         Label {
             id: lblTestTotal
             anchors{
-                top: btnApply.bottom
+                top: sliderTest.bottom
                 right: cbTestTotal.left
-                topMargin: 35
             }
             text: "Total "
         }
@@ -471,7 +470,7 @@ Page{
             id: cbTestTotal
             anchors{
                 right: parent.right
-                verticalCenter: lblTestLength1.verticalCenter
+                verticalCenter: lblTestTotal.verticalCenter
             }
             value: 0
             largeSized: true
@@ -498,13 +497,13 @@ Page{
                 top: sliderTest.bottom
                 left: parent.left
             }
-            text: "Completed in"
+            text: "Completed in "
             visible: false
         }
         CountBubble{
             id: cbLastTest
             anchors{
-                right: parent.right
+                left: lblLastTestTime.right
                 verticalCenter: lblLastTestTime.verticalCenter
             }
             value: 0

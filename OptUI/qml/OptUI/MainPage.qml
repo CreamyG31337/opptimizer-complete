@@ -26,7 +26,7 @@ Page {
             ListElement {name:"5"}
         }
         onAccepted: {
-            console.log(selectedIndex + 1);
+            //console.log(selectedIndex + 1);
             pageHeader.title = "OPPtimizer: Profile " + (selectedIndex + 1);
             settingsPage.fnBlockEvents();
             settingsPage.selectedProfile = selectedIndex;
@@ -98,11 +98,15 @@ Page {
         MenuLayout {
             MenuItem { text: qsTr("Reset Settings"); onClicked: {
                     objQSettings.clear();
-                    settingsPage.loadSettings();
+                    //settingsPage.loadSettings();
                     var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
                     db.transaction(function(tx) {
-                         tx.executeSql('DROP TABLE IF EXISTS History');
+                         tx.executeSql('DROP TABLE IF EXISTS OPPtimizer.History');
                     })
+                    pageHeader.title = "OPPtimizer: Profile " + (headerSelectionDialog.selectedIndex + 1);
+                    settingsPage.fnBlockEvents();
+                    settingsPage.selectedProfile = headerSelectionDialog.selectedIndex;
+                    settingsPage.fixOCEnabled();
                 }}
             MenuItem { text: qsTr("Invert Colors"); onClicked: { theme.inverted = !theme.inverted; objQSettings.setValue("/settings/THEME/inverted", theme.inverted)}}
             MenuItem { text: qsTr("About OPPtimizer"); onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))}
