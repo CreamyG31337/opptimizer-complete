@@ -11,5 +11,6 @@ Package: opptimizer-ui
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, opptimizer
 Description: Overclock your N9
- This package contains the UI. The kernel modules are a different package.
+ This package contains the UI and a daemon to apply overclock on boot.
+ The required kernel modules are a different package.
 XSBC-Maemo-Display-Name: OpptimizerN9

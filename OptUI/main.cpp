@@ -193,6 +193,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
     QmlApplicationViewer viewer;
+    viewer.engine()->setOfflineStoragePath("/opt/opptimizer");
     viewer.rootContext()->setContextProperty("objQSettings",&objSettings);
     viewer.rootContext()->setContextProperty("objOpptimizerUtils",&objOpptimizerUtils);
 

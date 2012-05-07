@@ -1,12 +1,18 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-
-#define AC_ENABLE_PATH   "/sys/kernel/security/validator/enabled"
-#define AC_ENFORCE_PATH  "/sys/kernel/security/validator/enforce"
-#define AC_MODLIST_PATH  "/sys/kernel/security/validator/modlist"
-
-#define SHA1_HASH_LENGTH  20
-
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QtCore/QCoreApplication>
+#include <QtDebug>
+#include <QFile>
+#include <QTextStream>
+#include <QObject>
+#include <QProcess>
+#include <QDataStream>
+#include <QFileInfo>
+#include <QtDeclarative>
+#include <QtCore/QSettings>
 
 #endif // MAIN_H

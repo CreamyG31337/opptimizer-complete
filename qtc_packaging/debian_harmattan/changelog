@@ -1,3 +1,19 @@
+opptimizer-ui (1.2.0) unstable; urgency=low
+  * Daemon is able to read/write same database as UI
+
+ -- Lance Colton <lance.colton@gmail.com>  Mon, 7 May 2012 04:15:00 -0600
+
+opptimizer-ui (1.1.0) unstable; urgency=low
+  * Added SQL backed storage of benchmark results
+  * Added support for 5 different profiles
+
+ -- Lance Colton <lance.colton@gmail.com>  Sat, 5 May 2012 23:59:00 -0600
+
+opptimizer-ui (1.0.1) unstable; urgency=low
+  * Fixed < 1000mhz "max speed" on status screen showing an extra digit
+
+ -- Lance Colton <lance.colton@gmail.com>  Thu, 3 May 2012 00:37:00 -0600
+
 opptimizer-ui (1.0.0) unstable; urgency=low
   * Initial Release
 

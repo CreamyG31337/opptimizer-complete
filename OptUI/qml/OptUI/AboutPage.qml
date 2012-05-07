@@ -86,7 +86,7 @@ Page{
 
     Label{
         id: lblVersion
-        text: "OPPtimizer version 1.1.0\nCreated by Lance Colton"
+        text: "OPPtimizer version 1.2.0\nCreated by Lance Colton"
         anchors{
             top: lblLinkDonate.bottom
             horizontalCenter: parent.horizontalCenter

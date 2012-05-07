@@ -6,7 +6,7 @@ import com.nokia.extras 1.0
 Page{
     id: warningPage
     anchors.margins: UiConstants.DefaultMargin
-     property string warnings
+    property string warnings
 
     ToolBarLayout {
         id: noTools

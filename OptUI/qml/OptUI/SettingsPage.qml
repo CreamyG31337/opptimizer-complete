@@ -92,15 +92,8 @@ Page{
         var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
         db.transaction(function(tx) {
             // Add row for this freq/volt combo if doesn't exist already
-            tx.executeSql('INSERT OR IGNORE INTO History VALUES(?,?,0,1);', [ sliderFreq.value, sliderVolts.value ]);//set suspected crashes to 1 for now
-            // Get existing iterations done
-//            var rs = tx.executeSql('SELECT IterationsPassed FROM History WHERE Frequency=? AND Voltage=?;', [ sliderFreq.value, sliderVolts.value ]);
-//            if (rs.rows.length > 0){//should have got 1 row
-//                // update row to add iterations just done
-//                totalIter = parseInt(rs.rows.item(0).IterationsPassed) + sliderTest.value //javascript + sqlite = shit.
-//                tx.executeSql('UPDATE History SET IterationsPassed=? WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
-//                console.debug("tried to update total iters from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
-//            }
+            //set suspected crashes to 1 for now
+            tx.executeSql('INSERT OR IGNORE INTO History VALUES(?,?,0,1);', [ sliderFreq.value, sliderVolts.value ]);
         })
 
         overlayBlocker.visible = true;
@@ -172,14 +165,13 @@ Page{
             var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
             var totalIter = 0
             db.transaction(function(tx) {
-                // Add row for this freq/volt combo if not exist already
-                //tx.executeSql('INSERT OR IGNORE INTO History VALUES(?,?,0,0);', [ sliderFreq.value, sliderVolts.value ]);
                 // Get existing iterations done
                 var rs = tx.executeSql('SELECT IterationsPassed FROM History WHERE Frequency=? AND Voltage=?;', [ sliderFreq.value, sliderVolts.value ]);
                 if (rs.rows.length > 0){//should have got 1 row
-                    // update row to add iterations just done
+                    // update row to add iterations just done.
+                    // also validate any rows with same voltage but lower freq
                     totalIter = parseInt(rs.rows.item(0).IterationsPassed) + sliderTest.value //javascript + sqlite = shit.
-                    tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
+                    tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency <=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
                     console.debug("tried to update total iters from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
                 }
             })
@@ -400,7 +392,7 @@ Page{
             }
             minimumValue: 1000000
             maximumValue: 1425000
-            value: objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value",1375000)
+            value: objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value",objOpptimizerUtils.getDefaultVoltage())
             stepSize: 12500
          }
 

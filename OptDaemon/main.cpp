@@ -1,127 +1,182 @@
-#include <QtCore/QCoreApplication>
-#include <QtDebug>
-#include <QFile>
-#include <QTextStream>
-#include <QObject>
-#include <QProcess>
 #include <main.h>
-#include <QDataStream>
-
-
-static const char AC_MODULE_HASH[] = {
-//    0xac,0x34,0xf7,0x5,0x79,0x1d,0x4f,0x6,0xfd,0xf0,0x5e,0xd,0x14,0x29,0xb3,0x7a,0x80,0xf6,0x3b,0xbf
-#include "../qtc_packaging/debian_harmattan/symsmodhash.inc"
-};
-
-static const char AC_MODULE2_HASH[] = {
-#include "../qtc_packaging/debian_harmattan/opptmodhash.inc"
-  //  0x9c,0xd3,0xda,0xb0,0x90,0x2e,0x65,0xe4,0xfe,0xa9,0x41,0xba,0x7,0x6b,0xff,0x95,0xe,0x51,0xde,0xab
-};
-
-int whitelist_module(const char hash[SHA1_HASH_LENGTH])
-{
-    QFile file(AC_MODLIST_PATH);
-    if (! file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
-        qDebug() << "modlist file open failed!!";
-        qDebug() << file.errorString();
-        return 0;
-    }
-    //QDataStream out(&file);
-    //int ret = out.writeRawData(hash,SHA1_HASH_LENGTH);
-    int ret = file.write(hash,SHA1_HASH_LENGTH);
-    qDebug() << file.errorString();
-    file.close();
-    return ret;
-}
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    //check if modules need whitelisting
-    bool NeedWhitelisting1 = false;
-    bool NeedWhitelisting2 = false;
-    QFile file(AC_MODLIST_PATH);
-    if (! file.open(QIODevice::ReadOnly)){
-        qDebug() << "modlist file open failed!!";
+    //should set same as UI for qsettings, it doesn't work though. have to set path manually below
+    QCoreApplication::setOrganizationName("FakeCompany");
+    QCoreApplication::setOrganizationDomain("appcheck.net");
+    QCoreApplication::setApplicationName("OPPtimizer");
+
+    //run loader to enable modules
+    if (!QFileInfo("/proc/opptimizer").exists()){
+        if(QProcess::execute("/opt/opptimizer/bin/oppldr")){
+            qDebug() << "loader failed";
+            return -1;
+        }
+        else
+            qDebug() << "loader started";
+    }else{
+        qDebug() << "kernel modules already loaded";
+    }
+
+    //load qsettings
+    QSettings objQsettings("/home/user/.config/FakeCompany/OPPtimizer.conf",
+                           QSettings::NativeFormat,&app);
+
+    qDebug() << objQsettings.allKeys();
+
+    if (!objQsettings.value("/settings/OcOnStartup/enabled",false).toBool()){
+        qDebug() << "OC on boot is disabled, not set, or couldn't read QSettings object";
+        return 0;
+    }
+
+    int requestedProfile = objQsettings.value("/settings/OcOnStartup/profile",-1).toInt();
+
+    if (requestedProfile == -1){
+        qDebug() << "OC on boot is enabled but don't know which profile to set";
+        return 0;
+    }
+
+    QString strReqestedProfile =  QString::number(requestedProfile);
+
+    int requestedFrequency = objQsettings.value("/settings/" + strReqestedProfile + "/CPUFreq/value",-1).toInt();
+    int requestedVoltage = objQsettings.value("/settings/" + strReqestedProfile + "/CPUVolts/value",-1).toInt();
+    bool reqCustomVoltage = objQsettings.value("/settings/" + strReqestedProfile + "/CustomVolts/enabled",true).toBool();
+    bool reqSmartReflexStatus = objQsettings.value("/settings/" + strReqestedProfile + "/SmartReflex/enabled",true).toBool();
+
+    qDebug() << "going to set FREQ/VOLTS/CustomVolts/SR: " << requestedFrequency << " " << requestedVoltage << " " << reqCustomVoltage << " " << reqSmartReflexStatus;
+
+    //load database
+    QDeclarativeEngine engine;
+    engine.setOfflineStoragePath("/opt/opptimizer/"); //actually useless here
+
+    QSqlDatabase db;
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    if (!db.isValid()){
+        qDebug() << "QSQLITE database driver failed to load -- aborting";
+        qDebug() << db.lastError();
+        return -1;
+    }
+
+    //QML sets the database name to the md5 hash of what we told it to...
+    db.setDatabaseName("/opt/opptimizer/Databases/210b4f1841d3275bfa1bdb5b8eef09c8.sqlite");
+    db.open();
+    if (!db.isOpen()){
+        qDebug() << "OPPtimizer database failed to load -- aborting";
+        qDebug() << db.lastError();
+        return -1;
+    }
+
+    QSqlQuery query;
+    bool queryValid;
+    //voltage in the db and settings object both are equal to the default if custom voltage was disabled
+    //if there is a frequency >= reqest that is fully tested at this voltage we are okay to proceed
+    query.prepare("SELECT MAX(IterationsPassed) FROM History WHERE Frequency >=? AND Voltage=? AND SuspectedCrashes=0;");
+    query.bindValue(0, requestedFrequency);
+    query.bindValue(1, requestedVoltage);
+    queryValid = query.exec();
+    if (!queryValid){
+        qDebug() << "database select 1 failed -- aborting";
+        qDebug() << query.lastError();
+        return -1;
+    }
+    QVariant IterationsPassed;
+    //QVariant SuspectedCrashes;
+    while (query.next()) {
+        IterationsPassed = query.value(0);
+        //SuspectedCrashes = query.value(1);
+        qDebug() << IterationsPassed.toInt();
+        //qDebug() << SuspectedCrashes.toInt();
+    }
+
+    if (IterationsPassed.toInt() < 15000){
+        qDebug() << "Insufficient testing at this voltage and selected or higher frequencies";
+        return 0;
+    }
+
+    //do one more query to check if any crashes have occured at a frequency <= request and same voltage
+    query.clear();
+    query.prepare("SELECT * FROM History WHERE Frequency <=? AND Voltage=? AND SuspectedCrashes > 0;");
+    query.bindValue(0, requestedFrequency);
+    query.bindValue(1, requestedVoltage);
+    queryValid = query.exec();
+    if (!queryValid){
+        qDebug() << "database select 2 failed -- aborting";
+        qDebug() << query.lastError();
+        return -1;
+    }
+    if (query.size() > 0){//any # rows returned = bad
+        qDebug() << "aborting because this voltage is unstable at selected or a lower frequency";
+        return 0;
+    }
+
+    qDebug() << "proceeding with overclock...";
+
+    //mark this voltage/freq as bad for now so we can avoid any reboot loop caused by unstable overclock
+    query.clear();
+    query.prepare("UPDATE History SET SuspectedCrashes=1 WHERE Frequency=? AND Voltage=?;");
+    query.bindValue(0, requestedFrequency);
+    query.bindValue(1, requestedVoltage);
+    queryValid = query.exec();
+    if (!queryValid){
+        qDebug() << "database update pre oc failed -- aborting";
+        qDebug() << query.lastError();
+        return -1;
+    }
+    //commit / close db to avoid corruption
+    query.finish();
+    db.commit();
+    db.close();
+
+    //do overclock
+    QFile file("/sys/power/sr_vdd1_autocomp");
+    if (! file.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "/sys/power/sr_vdd1_autocomp open failed!!";
         qDebug() << file.errorString();
-        return app.exec();
+        return -1;
     }
-    else
-        qDebug() << "modlist file opened successfully";
+    QString reqSRStr = reqSmartReflexStatus ? "1" : "0";
+    QTextStream out(&file);
+    out << reqSRStr;
+    file.close();
 
-    QByteArray hashlist;
-    hashlist = file.readAll();
-
-    QByteArray NewHash;
-    NewHash = QByteArray::fromRawData(AC_MODULE_HASH,sizeof(AC_MODULE_HASH));
-
-    //qDebug() << sizeof(AC_MODULE_HASH);
-    //qDebug() << NewHash.toHex();
-
-    if (!hashlist.contains(NewHash.toHex())){
-        NeedWhitelisting1 = true;
-        qDebug() << "hash1 not found in whitelist";
+    QFile file2("/proc/opptimizer");
+    if (! file2.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "OPP file open failed!!";
+        qDebug() << file2.errorString();
+        return -1;
     }
-    else
-        qDebug() << "hash1 already whitelisted";
-
-    QByteArray NewHash2;
-    NewHash2  = QByteArray::fromRawData(AC_MODULE2_HASH,sizeof(AC_MODULE2_HASH));
-    if (!hashlist.contains(NewHash2.toHex())){
-        NeedWhitelisting2 = true;
-        qDebug() << "hash2 not found in whitelist";
+    QString reqOCStr = QString::number(requestedFrequency);
+    if (reqCustomVoltage){
+        reqOCStr += " " + QString::number(requestedVoltage);
     }
-    else
-        qDebug() << "hash2 already whitelisted";
+    QTextStream out2(&file2);
+    out2 << reqOCStr;
 
-    //whitelist modules
-    if (NeedWhitelisting1){
-        int ret = whitelist_module(AC_MODULE_HASH);
-        if (ret < 1){
-             qDebug() << "hash1 insert failed";
-             return app.exec();
-        }
-        else
-            qDebug() << "wrote hash1: " << ret << "bytes";
-    }
-    if (NeedWhitelisting2){
-        int ret = whitelist_module(AC_MODULE2_HASH);
-        if (ret < 1){
-             qDebug() << "hash2 insert failed";
-             return app.exec();
-        }
-        else
-            qDebug() << "wrote hash2: " << ret << "bytes";
-    }
+    //sleep for 2 minutes
+    qDebug() << "sleeping 2 min";
+    sleep(120);
+    qDebug() << "awoken";
 
-    QProcess p;
-    QString strOutput;
-    QString strError;
-    p.start("/sbin/modprobe symsearch");
-    p.waitForFinished(-1);
-    strOutput = p.readAllStandardOutput();
-    strError = p.readAllStandardError();
-    qDebug() << strOutput;
-    qDebug() << strError;
-    if (strError.length() > 1)
-         return app.exec();
-        //lastOPPtimizerStatus = "ERROR";
-    //else
-        //lastOPPtimizerStatus = strOutput;
-    //handle error
-    p.start("/sbin/modprobe opptimizer_n9");
-    p.waitForFinished(-1);
-    strOutput = p.readAllStandardOutput();
-    strError = p.readAllStandardError();
-    qDebug() << strOutput;
-    qDebug() << strError;
-    if (strError.length() > 1)
-        //lastOPPtimizerStatus = "ERROR";
-         return app.exec();
-    //else
-        //lastOPPtimizerStatus = strOutput;
-    //handle error
+    //mark this voltage/freq as safe again
+    db.open();
+    if (!db.isOpen()){
+        qDebug() << "OPPtimizer database failed to load after oc -- combo will be left marked unstable";
+        qDebug() << db.lastError();
+        return 0;
+    }
+    query.prepare("UPDATE History SET SuspectedCrashes = 0 WHERE Frequency =? AND Voltage=?;");
+    query.bindValue(0, requestedFrequency);
+    query.bindValue(1, requestedVoltage);
+    queryValid = query.exec();
+    if (!queryValid){
+        qDebug() << "database update pre oc failed -- aborting";
+        qDebug() << query.lastError();
+        return -1;
+    }
+    //exit ???
 
     return app.exec();
 }

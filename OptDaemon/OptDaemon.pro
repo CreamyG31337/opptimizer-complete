@@ -1,6 +1,6 @@
 
 contains(MEEGO_EDITION,harmattan) {
-    target.path = /opt/OptDaemon/bin
+    target.path = /opt/opptimizer/bin
     INSTALLS += target
 }
 
@@ -11,3 +11,6 @@ SOURCES += \
 
 HEADERS += \
     main.h
+
+QT += declarative
+QT += sql
