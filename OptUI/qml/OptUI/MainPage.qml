@@ -26,12 +26,10 @@ Page {
             ListElement {name:"5"}
         }
         onAccepted: {
-            //console.log(selectedIndex + 1);
             pageHeader.title = "OPPtimizer: Profile " + (selectedIndex + 1);
             settingsPage.fnBlockEvents();
             settingsPage.selectedProfile = selectedIndex;
             settingsPage.fixOCEnabled();
-            //pageStack.push(Qt.resolvedUrl("SettingsPage.qml"),{selectedProfile: selectedIndex})
         }
     }
     ToolBarLayout {

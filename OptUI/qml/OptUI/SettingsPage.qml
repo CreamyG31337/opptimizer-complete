@@ -51,15 +51,19 @@ Page{
         }
         else{
             //check for any frequency < selected with same voltage and 15k iters and 0 crashes, allow it
-            var MaxFreq = 0
+            var MaxFreq
             var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
             db.transaction(function(tx) {
                 var rs = tx.executeSql('SELECT MAX(Frequency) AS MAXFREQ FROM History WHERE Voltage=? AND IterationsPassed >= 15000 AND SuspectedCrashes = 0;', [sliderVolts.value]);
                 if (rs.rows.length > 0){
                     MaxFreq = rs.rows.item(0).MAXFREQ
+                    if (MaxFreq == '') MaxFreq = 0;//wtf...
+                }else{
+                    //no rows
+                    MaxFreq = 0;
                 }
             })
-            console.debug("found max freq of " + MaxFreq)
+            console.debug(qsTr("found tested max freq of '%1' at this voltage".arg(MaxFreq)))
             if (sliderFreq.value < MaxFreq){
                 swOCEnabled.enabled = true;
                 console.debug("enabled switch but left oc on boot as is")
@@ -67,23 +71,9 @@ Page{
             else{
                 swOCEnabled.enabled = false;
                 swOCEnabled.checked = false;
+                console.debug("disabled oc on boot")
             }
-
-            console.debug("disabled oc on boot")
         }
-        //this stuff doesn't seem to be needed due to the bindings updating fine
-//        if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1 === selectedProfile) )) {
-//            swOCEnabled.checked = true;
-//        }
-//        else{
-//            swOCEnabled.checked = false;
-//        }
-//        swCustomVolts.checked = objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false);
-//        swSmartReflex.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true);
-//        sliderFreq.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUFreq/value",1000);
-//        sliderVolts.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value",1350000);
-//        sliderTest.value = objQSettings.getValue("/settings/TestLength/value",3000);
-//        checkHistory();
     }
 
     function startApply(){
@@ -267,14 +257,21 @@ Page{
                             infoMessageBanner.timerShowTime = 3000;
                             infoMessageBanner.show();
                         }
-                        else{
-                            sliderVolts.value = objOpptimizerUtils.getDefaultVoltage();
-                        }
+//                        else{
+//                            sliderVolts.value = objOpptimizerUtils.getDefaultVoltage();
+//                        }
                     }
+                    if (!swCustomVolts.checked) {
+                        sliderVolts.enabled = true;
+                        sliderVolts.value = objOpptimizerUtils.getDefaultVoltage();
+                        sliderVolts.enabled = false;
+                    }
+                    else
+                        sliderVolts.enabled = true;
+                        parseInt(objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage()),10)
                 }
             }
         }
-
 
         Row {
             id: rowSR
@@ -384,7 +381,7 @@ Page{
 
         Slider {
             id: sliderVolts
-            enabled: swCustomVolts.checked
+            enabled: true
             anchors{
                 top: lblOCVolts.bottom
                 left: parent.left
@@ -392,7 +389,7 @@ Page{
             }
             minimumValue: 1000000
             maximumValue: 1425000
-            value: objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value",objOpptimizerUtils.getDefaultVoltage())
+            value: 1400000
             stepSize: 12500
          }
 
