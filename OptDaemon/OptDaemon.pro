@@ -1,4 +1,3 @@
-
 contains(MEEGO_EDITION,harmattan) {
     target.path = /opt/opptimizer/bin
     INSTALLS += target

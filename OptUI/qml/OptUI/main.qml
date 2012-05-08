@@ -85,7 +85,8 @@ PageStackWindow {
                 width: parent.width - 30
                 height: parent.height / 3
                 onClicked: {
-                    objOpptimizerUtils.stopBenchmark();
+                    objOpptimizerUtils.stopBenchmark();                    
+                    mainPage.settingsAbortTest();
                     overlayBenchmarking.visible = false;
                 }
             }

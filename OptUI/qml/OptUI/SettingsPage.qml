@@ -27,12 +27,14 @@ Page{
         db.transaction(function(tx) {
             // Create the history database table if it doesn't already exist, composite key on freq/volt
             tx.executeSql('CREATE TABLE IF NOT EXISTS History(Frequency INT, Voltage INT, IterationsPassed INT, SuspectedCrashes INT, PRIMARY KEY(Frequency, Voltage))');
-            var rs = tx.executeSql('SELECT IterationsPassed FROM History WHERE Frequency=? AND Voltage=?;', [sliderFreq.value, sliderVolts.value]);
+            //total valid testing is sum of testing done at this voltage and this frequency, and also at higher frequencies with same voltage
+            var rs = tx.executeSql('SELECT SUM(IterationsPassed) as IterationsPassed FROM History WHERE Frequency>=? AND Voltage=?;', [sliderFreq.value, sliderVolts.value]);
             if (rs.rows.length > 0){
                 ItersPassed = rs.rows.item(0).IterationsPassed;
+                if (ItersPassed == '') ItersPassed = 0 //got null
             }
         })
-        console.debug("checkhistory finds iters passed: " + ItersPassed)
+        console.debug("History search for exact combo " + sliderFreq.value+ " " +  sliderVolts.value + " shows iters passed: " + ItersPassed)
         cbTestTotal.value = ItersPassed;
     }
 
@@ -42,12 +44,36 @@ Page{
 
     function fixOCEnabled(){
         fnBlockEvents()
+        //first find lowest frequency with this voltage and any suspected crashes, don't allow higher freq on boot without retesting
+        var MinFreq
+        var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
+        db.transaction(function(tx) {
+            var rs = tx.executeSql('SELECT MIN(Frequency) AS MINFREQ FROM History WHERE Voltage=? AND SuspectedCrashes > 0;', [sliderVolts.value]);
+            if (rs.rows.length > 0){
+                MinFreq = rs.rows.item(0).MINFREQ
+                if (MinFreq == '') MinFreq = -1;//i guess you get a null row if using aggregates
+            }else{
+                //no rows
+                MinFreq = -2;
+            }
+        })
+        if (MinFreq <= sliderFreq.value && MinFreq > 0){
+            //rejected because crashed at lower freq and same voltage
+            swOCEnabled.enabled = false;
+            swOCEnabled.checked = false;
+            infoMessageBanner.hide();
+            infoMessageBanner.text = "This combo seems unstable! Proceed with caution!";
+            infoMessageBanner.show();
+            console.debug("Disabled and unchecked OC on boot because crashed at same or lower freq and same voltage")
+            return;
+        }
+
         if (cbTestTotal.value >= 15000){
             swOCEnabled.enabled = true;
-            if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile))
-                swOCEnabled.checked = true;
-            console.debug("enabled oc on boot switch, checked = " + objQSettings.getValue("/settings/OcOnStartup/enabled",false) + objQSettings.getValue("/settings/OcOnStartup/profile",-1) + selectedProfile)
-
+            //don't ever check it automatically
+//            if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile))
+//                swOCEnabled.checked = true;
+            console.debug("enabled oc on boot switch because it was previously validated")
         }
         else{
             //check for any frequency < selected with same voltage and 15k iters and 0 crashes, allow it
@@ -57,21 +83,21 @@ Page{
                 var rs = tx.executeSql('SELECT MAX(Frequency) AS MAXFREQ FROM History WHERE Voltage=? AND IterationsPassed >= 15000 AND SuspectedCrashes = 0;', [sliderVolts.value]);
                 if (rs.rows.length > 0){
                     MaxFreq = rs.rows.item(0).MAXFREQ
-                    if (MaxFreq == '') MaxFreq = 0;//wtf...
+                    if (MaxFreq == '') MaxFreq = -1;
                 }else{
                     //no rows
-                    MaxFreq = 0;
+                    MaxFreq = -2;
                 }
             })
-            console.debug(qsTr("found tested max freq of '%1' at this voltage".arg(MaxFreq)))
+            console.debug(qsTr("I found previously tested max freq of '%1' at this voltage".arg(MaxFreq)))
             if (sliderFreq.value < MaxFreq){
                 swOCEnabled.enabled = true;
-                console.debug("enabled switch but left oc on boot as is")
+                console.debug("Enabled switch but didn't change setting")
             }
             else{
                 swOCEnabled.enabled = false;
                 swOCEnabled.checked = false;
-                console.debug("disabled oc on boot")
+                console.debug("Disabled and unchecked OC on boot - freq above safely tested range")
             }
         }
     }
@@ -82,9 +108,11 @@ Page{
         var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
         db.transaction(function(tx) {
             // Add row for this freq/volt combo if doesn't exist already
-            //set suspected crashes to 1 for now
-            tx.executeSql('INSERT OR IGNORE INTO History VALUES(?,?,0,1);', [ sliderFreq.value, sliderVolts.value ]);
+            // then set suspected crashes to 1
+            tx.executeSql('INSERT OR IGNORE INTO History VALUES(?,?,0,0);', [ sliderFreq.value, sliderVolts.value ]);
+            tx.executeSql('UPDATE OR FAIL History SET SuspectedCrashes=1 WHERE Frequency=? AND Voltage=?;', [ sliderFreq.value, sliderVolts.value ]);
         })
+        //db is supposed to be commited now, not sure how to flush cache for safety
 
         overlayBlocker.visible = true;
         infoMessageBanner.timerShowTime = 1500
@@ -111,7 +139,7 @@ Page{
             infoMessageBanner.text = strStatus;
             infoMessageBanner.show();
             overlayBlocker.visible = false;
-            //count as crash?
+            testAborted();
         }
         else{
             infoMessageBanner.hide();
@@ -167,6 +195,14 @@ Page{
             })
             cbTestTotal.value = totalIter;
         }
+    }
+
+    //call this if the test is stopped for some reason without crashing to remove suspected crashes from db
+    function testAborted(){
+        var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
+        db.transaction(function(tx) {
+            tx.executeSql('UPDATE History SET SuspectedCrashes=0 WHERE Frequency=? AND Voltage=?;', [ sliderFreq.value, sliderVolts.value]);
+        })
     }
 
     Timer {
@@ -257,12 +293,8 @@ Page{
                             infoMessageBanner.timerShowTime = 3000;
                             infoMessageBanner.show();
                         }
-//                        else{
-//                            sliderVolts.value = objOpptimizerUtils.getDefaultVoltage();
-//                        }
                     }
                     if (!swCustomVolts.checked) {
-                        sliderVolts.enabled = true;
                         sliderVolts.value = objOpptimizerUtils.getDefaultVoltage();
                         sliderVolts.enabled = false;
                     }
@@ -366,7 +398,6 @@ Page{
             }
             value: sliderVolts.value
             largeSized: true
-            enabled: swCustomVolts.checked
             onValueChanged: {
                 if (value >= 1387500){
                     dangerVolts = true;
@@ -381,7 +412,7 @@ Page{
 
         Slider {
             id: sliderVolts
-            enabled: true
+            enabled: false
             anchors{
                 top: lblOCVolts.bottom
                 left: parent.left
@@ -389,7 +420,7 @@ Page{
             }
             minimumValue: 1000000
             maximumValue: 1425000
-            value: 1400000
+            value: objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage())
             stepSize: 12500
          }
 

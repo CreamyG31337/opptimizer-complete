@@ -42,7 +42,7 @@ Page{
         width: 170
         onClicked: {
             pageStack.pop(mainPage);
-            appWindow.pageStack.currentPage.whatthefuck();
+            appWindow.pageStack.currentPage.settingsStartApply();
         }
         style: NegativeButtonStyle {}
     }

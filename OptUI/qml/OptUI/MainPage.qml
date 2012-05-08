@@ -110,8 +110,10 @@ Page {
             MenuItem { text: qsTr("About OPPtimizer"); onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))}
         }
     }
-    function whatthefuck(){
-        //the question is WHY can't I just call this directly...
+    function settingsStartApply(){
         settingsPage.startApply();
+    }
+    function settingsAbortTest(){
+        settingsPage.testAborted();
     }
 }

@@ -60,7 +60,7 @@ public:
     OpptimizerUtils(QObject *parent = 0);
     Q_INVOKABLE QString getModuleVersion();
     Q_INVOKABLE QString getMaxVoltage();
-    Q_INVOKABLE QString getDefaultVoltage();
+    Q_INVOKABLE int getDefaultVoltage();
     Q_INVOKABLE QString getSmartReflexStatus();
     Q_INVOKABLE void setSmartReflexStatus(bool newStatus);
     Q_INVOKABLE QString getMaxFreq();

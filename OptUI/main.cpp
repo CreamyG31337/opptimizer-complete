@@ -123,9 +123,9 @@ QString OpptimizerUtils::getMaxVoltage(){
         return "Unknown";
 }
 
-QString OpptimizerUtils::getDefaultVoltage(){
+int OpptimizerUtils::getDefaultVoltage(){
     if(lastOPPtimizerStatus == "ERROR"){
-        return "ERR";
+        return -1;
         qDebug() << "default voltage get failed 1";
     }
 
@@ -138,15 +138,15 @@ QString OpptimizerUtils::getDefaultVoltage(){
         long long uvCalibInt = uvCalibStr.toLongLong();
         if (uvCalibInt != 0){
             qDebug() << "got default voltage from u_volt_calib: " + rx1.cap(1);
-            return rx1.cap(1);
+            return rx1.cap(1).toInt();
         }
         int pos2 = rx2.indexIn(lastOPPtimizerStatus);
         if (pos2 > -1){
             qDebug() << "got default voltage from u_volt_dyn_nominal: " + rx2.cap(1);
-            return rx2.cap(1);
+            return rx2.cap(1).toInt();
         }
     }
-        return "Unknown";
+        return -2;
         qDebug() << "default voltage get failed 2";
 }
 
