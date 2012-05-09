@@ -2,6 +2,7 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 import com.nokia.extras 1.0
+import QtMobility.feedback 1.1
 
 Page{
     id: settingsPage
@@ -193,13 +194,31 @@ Page{
         topMargin: 10
     }    
 
+    Timer{
+        id: playHapticsEventAgain
+        onTriggered: testCompleteEffect.start();
+        interval: 250
+    }
+
+    HapticsEffect{
+        id: testCompleteEffect
+        attackIntensity: 1.0
+        attackTime: 0
+        intensity: 1.0
+        duration: 50
+        fadeTime: 10
+        fadeIntensity: 0.5
+    }
+
     Connections {
         target: objOpptimizerUtils
         onRenderedImageOut: {
+            testCompleteEffect.start();
+            playHapticsEventAgain.start();
             overlayBenchmarking.visible = false
             cbLastTest.value = timeWasted
             infoMessageBanner.text = "Testing completed. Saving...";
-            infoMessageBanner.show();
+            infoMessageBanner.show();            
             objQSettings.setValue("/settings/" + selectedProfile + "/CPUVolts/value",sliderVolts.value)
             objQSettings.setValue("/settings/" + selectedProfile + "/CPUFreq/value",sliderFreq.value)
             objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex/enabled",swSmartReflex.checked)
@@ -220,7 +239,9 @@ Page{
                 }
             })
             cbTestTotal.value += sliderTest.value;
+            testCompleteEffect.stop();
         }
+
     }
 
     //call this if the test is stopped for some reason without crashing to remove suspected crashes from db
