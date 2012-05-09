@@ -54,6 +54,7 @@ Page{
         fnBlockEvents();//don't save anything while loading
         swCustomVolts.checked = objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false)
         swSmartReflex.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true)
+        sliderVolts.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage())
         checkHistory();
         fnBlockEvents();//just in case
         fixOCEnabled();
@@ -180,6 +181,9 @@ Page{
         testProgress.maximumValue = sliderTest.value;
         testProgress.value = 0;
         objOpptimizerUtils.testSettings(sliderTest.value); //this branches to a new thread
+        //FOR DEBUGING WE CAN MAKE ALL TESTS REALLY FAST
+        //objOpptimizerUtils.testSettings(500); //this branches to a new thread
+        //END DEBUGGING
         overlayBenchmarking.visible = true
     }
 
