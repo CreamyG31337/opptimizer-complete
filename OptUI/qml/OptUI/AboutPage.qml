@@ -45,32 +45,15 @@ Page{
         horizontalAlignment: Text.AlignJustify
     }
 
-//    Label{
-//        id: lblLinkDonate
-//        text: "WePay"
-//        anchors{
-//            right: parent.horizontalCenter
-//            top: lblDonate.bottom
-//        }
-//        font.underline: true
-//        color: "steelblue"
-//        MouseArea{
-//            anchors.fill: parent
-//            onClicked: {
-//                myBusyInd.running = true;
-//                myBusyInd.visible = true;
-//                Qt.openUrlExternally("https://www.wepay.com/donations/n9-apps-by-creamy-goodness")
-//                thisIsDumb.start();
-//            }
-//        }
-//    }
-
     Label{
         id: lblLinkDonate2
         text: "PayPal"
-        anchors.leftMargin: 10
-        anchors.left: lblLinkDonate.right
-        anchors.top: lblDonate.bottom
+        anchors{
+            horizontalCenter: parent.horizontalCenter
+            leftMargin: 10
+            left: lblLinkDonate.right
+            top: lblDonate.bottom
+        }
         font.underline: true
         color: "steelblue"
         MouseArea{
@@ -88,7 +71,7 @@ Page{
         id: lblVersion
         text: "OPPtimizer version 1.2.0\nCreated by Lance Colton"
         anchors{
-            top: lblLinkDonate.bottom
+            top: lblLinkDonate2.bottom
             horizontalCenter: parent.horizontalCenter
             topMargin: 30
         }

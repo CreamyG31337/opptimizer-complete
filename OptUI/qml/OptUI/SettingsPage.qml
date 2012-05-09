@@ -21,6 +21,12 @@ Page{
         z: 50
     }
 
+    //this gets called the first time the page is loaded, once it's done setting all the default values
+    Component.onCompleted: {
+        console.debug("done loading settings page")
+        reloadProfile();
+    }
+
     function checkHistory(){
         var ItersPassed = 0;
         var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
@@ -38,12 +44,23 @@ Page{
         cbTestTotal.value = ItersPassed;
     }
 
-    function fnBlockEvents(){
-        blockEvents.start();
+    //used to block things from being saved because we can't tell the difference between the user clicking and the system changing things as it loads :(
+    function fnBlockEvents(){        
+        blockEvents.restart();//make sure we get the full 200ms
     }
 
-    function fixOCEnabled(){
-        fnBlockEvents()
+    //called on initial load and any time the profile is switched
+    function reloadProfile(){
+        fnBlockEvents();//don't save anything while loading
+        swCustomVolts.checked = objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false)
+        swSmartReflex.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true)
+        checkHistory();
+        fnBlockEvents();//just in case
+        fixOCEnabled();
+    }
+
+    //sets OCEnabled switch depending on voltage and frequency. set while being dragged by user so no extra processing here
+    function fixOCEnabled(){        
         //first find lowest frequency with this voltage and any suspected crashes, don't allow higher freq on boot without retesting
         var MinFreq
         var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
@@ -70,10 +87,14 @@ Page{
 
         if (cbTestTotal.value >= 15000){
             swOCEnabled.enabled = true;
-            //don't ever check it automatically
-//            if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile))
-//                swOCEnabled.checked = true;
             console.debug("enabled oc on boot switch because it was previously validated")
+            console.debug(selectedProfile);
+            console.debug(objQSettings.getValue("/settings/OcOnStartup/enabled",false));
+            console.debug(objQSettings.getValue("/settings/OcOnStartup/profile",-1))
+            if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile)){
+                swOCEnabled.checked = true;
+                console.debug("checked it again too as it was before");
+            }
         }
         else{
             //check for any frequency < selected with same voltage and 15k iters and 0 crashes, allow it
@@ -246,8 +267,14 @@ Page{
                             infoMessageBanner.show();
                             infoMessageBanner.topMargin = 200
                         }
-                        else
+                        else{
                             swOCEnabled.checked = !swOCEnabled.checked
+                            if (!blockEvents.running) {//so we get to use this instead. (onChecked fires too early -- when the component is created)
+                                objQSettings.setValue("/settings/OcOnStartup/enabled",swOCEnabled.checked)
+                                //also add profile #
+                                objQSettings.setValue("/settings/OcOnStartup/profile", selectedProfile)
+                            }
+                        }
                     }
                 }
                 Switch {
@@ -257,11 +284,7 @@ Page{
                     checked: false
                     enabled: cbTestTotal.value >= 15000
                     onCheckedChanged:{//wow this crappy harmattan QML is missing both the pressed and clicked events and properties for switches.
-                        if (!blockEvents.running) {//so we get to use this instead. (onChecked fires too early -- when the component is created)
-                            objQSettings.setValue("/settings/OcOnStartup/enabled",swOCEnabled.checked)
-                            //also add profile #
-                            objQSettings.setValue("/settings/OcOnStartup/profile", selectedProfile)
-                        }
+
                     }
                 }
             }
@@ -283,7 +306,7 @@ Page{
              }
              Switch {
                  id: swCustomVolts
-                 checked: objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false)
+                 checked: false
                  onCheckedChanged:{
                     if (!blockEvents.running) {
                         objQSettings.setValue("/settings/" + selectedProfile + "/CustomVolts/enabled",swCustomVolts.checked)
@@ -300,7 +323,7 @@ Page{
                     }
                     else
                         sliderVolts.enabled = true;
-                        parseInt(objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage()),10)
+//                        parseInt(objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage()),10)
                 }
             }
         }
@@ -320,7 +343,7 @@ Page{
             }
             Switch {
                 id: swSmartReflex
-                checked: objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true)
+                checked: false
                 onCheckedChanged:{
                     if (!blockEvents.running) {
                         objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex/enabled",swSmartReflex.checked)
@@ -361,8 +384,10 @@ Page{
                 else{
                     dangerFreq = false;
                 }
-                checkHistory()
-                fixOCEnabled()
+                if (!blockEvents.running){
+                    checkHistory()
+                    fixOCEnabled()
+                }
             }
         }
 
@@ -405,8 +430,10 @@ Page{
                 else{
                     dangerVolts = false;
                 }
-                checkHistory()
-                fixOCEnabled()
+                if (!blockEvents.running){
+                    checkHistory()
+                    fixOCEnabled()
+                }
             }
         }
 

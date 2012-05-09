@@ -27,9 +27,8 @@ Page {
         }
         onAccepted: {
             pageHeader.title = "OPPtimizer: Profile " + (selectedIndex + 1);
-            settingsPage.fnBlockEvents();
             settingsPage.selectedProfile = selectedIndex;
-            settingsPage.fixOCEnabled();
+            settingsPage.reloadProfile();
         }
     }
     ToolBarLayout {

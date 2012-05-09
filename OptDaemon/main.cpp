@@ -9,30 +9,20 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("appcheck.net");
     QCoreApplication::setApplicationName("OPPtimizer");
 
-    //check last reboot reason -- bootreason=32wd_to in /proc/cmdline indicates bad shutdown
-    QFile file0("/proc/cmdline");
-    if (! file0.open(QIODevice::ReadOnly | QIODevice::Text)){
-        qDebug() << "/proc/cmdline open failed!!";
-        qDebug() << file0.errorString();
-        return -1;
-    }
-    QString strCmdLine = file0.readAll();
-    if (strCmdLine.contains("32wd_to")){
-        qDebug() << "/proc/cmdline bootreason indicates abnormal shutdown (32wd_to)";
-        qDebug() << file0.errorString();
+    QString strBootReason = "";
+    MeeGo::QmSystemState MySystemState;
+    int BootReason = MySystemState.getBootReason();
+    if (BootReason == MeeGo::QmSystemState::BootReason_Wdg32kTimeout) strBootReason = "32k watchdog timeout";
+    if (BootReason == MeeGo::QmSystemState::BootReason_SecViolation) strBootReason = "Security violation";
+    if (BootReason == MeeGo::QmSystemState::BootReason_SwdgTimeout) strBootReason = "Security watchdog timeout";
+    if (BootReason == MeeGo::QmSystemState::BootReason_Unknown) strBootReason = "Unknown BootReason";
+    if (strBootReason != ""){
+        qDebug() << "bad boot reason - overclock aborted: " << strBootReason;
         return 0;
     }
-    if (strCmdLine.contains("sw_rst")){
-        qDebug() << "/proc/cmdline bootreason indicates abnormal shutdown (sw_rst)";
-        qDebug() << file0.errorString();
-        return 0;
-    }
-    if (strCmdLine.contains("kernel crash")){
-        qDebug() << "/proc/cmdline bootreason indicates abnormal shutdown (kernel crash)";
-        qDebug() << file0.errorString();
-        return 0;
-    }
-    file0.close();
+    //don't abort for this one yet, it can be normal.
+    if (BootReason == MeeGo::QmSystemState::BootReason_SWReset) strBootReason = "SW reset issued by the system.";
+    qDebug() << "boot reason suspicious but not fatal: " << strBootReason;
 
     //run loader to enable modules
     if (!QFileInfo("/proc/opptimizer").exists()){
@@ -97,7 +87,7 @@ int main(int argc, char *argv[])
     QSqlQuery query;
     bool queryValid;
     //voltage in the db and settings object both are equal to the default if custom voltage was disabled
-    //if there is a frequency >= reqest that is fully tested at this voltage we are okay to proceed
+    //if there is a frequency >= request that is fully tested at this voltage we are okay to proceed
     query.prepare("SELECT SUM(IterationsPassed) FROM History WHERE Frequency >=? AND Voltage=? AND SuspectedCrashes=0;");
     query.bindValue(0, requestedFrequency);
     query.bindValue(1, requestedVoltage);
@@ -108,12 +98,9 @@ int main(int argc, char *argv[])
         return -1;
     }
     QVariant IterationsPassed;
-    //QVariant SuspectedCrashes;
     while (query.next()) {
         IterationsPassed = query.value(0);
-        //SuspectedCrashes = query.value(1);
         qDebug() << IterationsPassed.toInt();
-        //qDebug() << SuspectedCrashes.toInt();
     }
 
     if (IterationsPassed.toInt() < 15000){
@@ -186,7 +173,7 @@ int main(int argc, char *argv[])
     //sleep for a few seconds
     qDebug() << "sleeping 15 sec";
     sleep(15);
-    qDebug() << "awoken";
+    qDebug() << "awoken, going to mark this combo as ok again";
 
     //mark this voltage/freq as safe again
     db.open();
@@ -200,9 +187,9 @@ int main(int argc, char *argv[])
     query.bindValue(1, requestedVoltage);
     queryValid = query.exec();
     if (!queryValid){
-        qDebug() << "database update pre oc failed -- aborting";
+        qDebug() << "database update post oc failed -- combo will be left marked unstable";
         qDebug() << query.lastError();
-        return -1;
+        return 0;
     }
     //exit ???
 

@@ -11,5 +11,9 @@ SOURCES += \
 HEADERS += \
     main.h
 
+MOBILITY += systeminfo
+CONFIG += mobility
+CONFIG += qmsystem2
+
 QT += declarative
 QT += sql

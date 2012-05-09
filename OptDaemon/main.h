@@ -14,5 +14,6 @@
 #include <QFileInfo>
 #include <QtDeclarative>
 #include <QtCore/QSettings>
+#include <qmsystemstate.h>
 
 #endif // MAIN_H
