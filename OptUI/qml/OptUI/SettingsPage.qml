@@ -60,7 +60,12 @@ Page{
     }
 
     //sets OCEnabled switch depending on voltage and frequency. set while being dragged by user so no extra processing here
-    function fixOCEnabled(){        
+    function fixOCEnabled(){
+        //is this profile supposed to be enabled on boot if possible?
+        var enableOnBoot = false;
+        if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile))
+            enableOnBoot = true;
+
         //first find lowest frequency with this voltage and any suspected crashes, don't allow higher freq on boot without retesting
         var MinFreq
         var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
@@ -87,14 +92,6 @@ Page{
 
         if (cbTestTotal.value >= 15000){
             swOCEnabled.enabled = true;
-            console.debug("enabled oc on boot switch because it was previously validated")
-            console.debug(selectedProfile);
-            console.debug(objQSettings.getValue("/settings/OcOnStartup/enabled",false));
-            console.debug(objQSettings.getValue("/settings/OcOnStartup/profile",-1))
-            if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile)){
-                swOCEnabled.checked = true;
-                console.debug("checked it again too as it was before");
-            }
         }
         else{
             //check for any frequency < selected with same voltage and 15k iters and 0 crashes, allow it
@@ -110,17 +107,19 @@ Page{
                     MaxFreq = -2;
                 }
             })
-            console.debug(qsTr("I found previously tested max freq of '%1' at this voltage".arg(MaxFreq)))
+            console.debug(qsTr("Found previously tested max freq of '%1' at this voltage".arg(MaxFreq)))
             if (sliderFreq.value < MaxFreq){
                 swOCEnabled.enabled = true;
-                console.debug("Enabled switch but didn't change setting")
             }
             else{
                 swOCEnabled.enabled = false;
-                swOCEnabled.checked = false;
                 console.debug("Disabled and unchecked OC on boot - freq above safely tested range")
             }
         }
+    if (swOCEnabled.enabled && enableOnBoot)
+        swOCEnabled.checked = true;
+    else
+        swOCEnabled.checked = false;
     }
 
     function startApply(){
@@ -207,14 +206,16 @@ Page{
                 // Get existing iterations done
                 var rs = tx.executeSql('SELECT IterationsPassed FROM History WHERE Frequency=? AND Voltage=?;', [ sliderFreq.value, sliderVolts.value ]);
                 if (rs.rows.length > 0){//should have got 1 row
-                    // update row to add iterations just done.
-                    // also validate any rows with same voltage but lower freq
+                    // update row to add iterations just done.                    
                     totalIter = parseInt(rs.rows.item(0).IterationsPassed) + sliderTest.value //javascript + sqlite = shit.
-                    tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency <=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
-                    console.debug("tried to update total iters from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
+                    tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
+                    console.debug("updated this combo from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
+                    //also validate any rows with same voltage but lower freq
+                    //tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency<=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
+
                 }
             })
-            cbTestTotal.value = totalIter;
+            cbTestTotal.value += sliderTest.value;
         }
     }
 
