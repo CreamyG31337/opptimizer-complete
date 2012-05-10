@@ -2,7 +2,7 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 import com.nokia.extras 1.0
-import QtMobility.feedback 1.1
+//import QtMobility.feedback 1.1
 
 Page{
     id: settingsPage
@@ -26,7 +26,7 @@ Page{
     Component.onCompleted: {
         console.debug("done loading settings page")
         //try to load whichever one is set on startup
-        if (objQSettings.getValue("/settings/OcOnStartup/enabled",false)) selectedProfile = objQSettings.getValue("/settings/OcOnStartup/profile",0);
+        selectedProfile = objQSettings.getValue("/settings/OcOnStartup/profile",0);
         reloadProfile();
     }
 
@@ -67,7 +67,7 @@ Page{
     function fixOCEnabled(){
         //is this profile supposed to be enabled on boot if possible?
         var enableOnBoot = false;
-        if (objQSettings.getValue("/settings/OcOnStartup/enabled",false) && (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile))
+        if (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile)
             enableOnBoot = true;
 
         //first find lowest frequency with this voltage and any suspected crashes, don't allow higher freq on boot without retesting
@@ -120,8 +120,10 @@ Page{
                 console.debug("Disabled and unchecked OC on boot - freq above safely tested range")
             }
         }
-    if (swOCEnabled.enabled && enableOnBoot)
+    if (swOCEnabled.enabled && enableOnBoot){
         swOCEnabled.checked = true;
+        console.debug("checked oc on boot switch")
+    }
     else
         swOCEnabled.checked = false;
     }
@@ -196,31 +198,36 @@ Page{
         topMargin: 10
     }    
 
-    Timer{
-        id: playHapticsEventAgain
-        onTriggered: testCompleteEffect.start();
-        interval: 250
-    }
+//    Timer{
+//        id: playHapticsEventAgain
+//        onTriggered: testCompleteEffect.start();
+//        interval: 250
+//    }
 
-    HapticsEffect{
-        id: testCompleteEffect
-        attackIntensity: 1.0
-        attackTime: 0
-        intensity: 1.0
-        duration: 50
-        fadeTime: 10
-        fadeIntensity: 0.5
-    }
+//    HapticsEffect{
+//        id: testCompleteEffect
+//        attackIntensity: 1.0
+//        attackTime: 0
+//        intensity: 1.0
+//        duration: 50
+//        fadeTime: 10
+//        fadeIntensity: 0.5
+//    }
 
     Connections {
         target: objOpptimizerUtils
         onRenderedImageOut: {
-            testCompleteEffect.start();
-            playHapticsEventAgain.start();
+//            testCompleteEffect.start();
+//            playHapticsEventAgain.start();
             overlayBenchmarking.visible = false
             cbLastTest.value = timeWasted
             infoMessageBanner.text = "Testing completed. Saving...";
-            infoMessageBanner.show();            
+            infoMessageBanner.show();
+            if (swOCEnabled.checked){
+                objQSettings.setValue("/settings/OcOnStartup/profile",selectedProfile)
+            }else{
+                objQSettings.setValue("/settings/OcOnStartup/profile",-1)
+            }
             objQSettings.setValue("/settings/" + selectedProfile + "/CPUVolts/value",sliderVolts.value)
             objQSettings.setValue("/settings/" + selectedProfile + "/CPUFreq/value",sliderFreq.value)
             objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex/enabled",swSmartReflex.checked)
@@ -294,14 +301,16 @@ Page{
                             infoMessageBanner.text = "15,000 test iterations are required to apply on startup";
                             infoMessageBanner.show();
                             infoMessageBanner.topMargin = 200
-                        }
-                        else{
+                        }else{
                             swOCEnabled.checked = !swOCEnabled.checked
-                            if (!blockEvents.running) {//so we get to use this instead. (onChecked fires too early -- when the component is created)
-                                objQSettings.setValue("/settings/OcOnStartup/enabled",swOCEnabled.checked)
-                                //also add profile #
+                            if (swOCEnabled.checked)
                                 objQSettings.setValue("/settings/OcOnStartup/profile", selectedProfile)
-                            }
+                            else
+                                objQSettings.setValue("/settings/OcOnStartup/profile", -1)
+                                infoMessageBanner.text = "Saved..."
+                                console.debug("saved startup key settings: " + swOCEnabled.checked.toString() + " " + selectedProfile.toString())
+                                infoMessageBanner.show();
+                                infoMessageBanner.topMargin = 200
                         }
                     }
                 }

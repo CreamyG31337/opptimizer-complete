@@ -21,8 +21,10 @@ int main(int argc, char *argv[])
         return 0;
     }
     //don't abort for this one yet, it can be normal.
-    if (BootReason == MeeGo::QmSystemState::BootReason_SWReset) strBootReason = "SW reset issued by the system.";
-    qDebug() << "boot reason suspicious but not fatal: " << strBootReason;
+    if (BootReason == MeeGo::QmSystemState::BootReason_SWReset) {
+        strBootReason = "SW reset issued by the system.";
+        qDebug() << "boot reason suspicious but not fatal: " << strBootReason;
+    }
 
     //run loader to enable modules
     if (!QFileInfo("/proc/opptimizer").exists()){
@@ -40,17 +42,12 @@ int main(int argc, char *argv[])
     QSettings objQsettings("/home/user/.config/FakeCompany/OPPtimizer.conf",
                            QSettings::NativeFormat,&app);
 
-    qDebug() << objQsettings.allKeys();
-
-    if (!objQsettings.value("/settings/OcOnStartup/enabled",false).toBool()){
-        qDebug() << "OC on boot is disabled, not set, or couldn't read QSettings object";
-        return 0;
-    }
+    qDebug() << "read " +  QString::number(objQsettings.allKeys().count()) + " keys";
 
     int requestedProfile = objQsettings.value("/settings/OcOnStartup/profile",-1).toInt();
 
     if (requestedProfile == -1){
-        qDebug() << "OC on boot is enabled but don't know which profile to set";
+        qDebug() << "OC on boot is disabled or problem with QSettings";
         return 0;
     }
 
@@ -88,7 +85,7 @@ int main(int argc, char *argv[])
     bool queryValid;
     //voltage in the db and settings object both are equal to the default if custom voltage was disabled
     //if there is a frequency >= request that is fully tested at this voltage we are okay to proceed
-    query.prepare("SELECT SUM(IterationsPassed) FROM History WHERE Frequency >=? AND Voltage=? AND SuspectedCrashes=0;");
+    query.prepare("SELECT SUM(IterationsPassed) FROM History WHERE Frequency >=? AND Voltage=?;");
     query.bindValue(0, requestedFrequency);
     query.bindValue(1, requestedVoltage);
     queryValid = query.exec();
@@ -191,7 +188,8 @@ int main(int argc, char *argv[])
         qDebug() << query.lastError();
         return 0;
     }
-    //exit ???
+    //exit, don't restart
+    return 0;
 
     return app.exec();
 }
