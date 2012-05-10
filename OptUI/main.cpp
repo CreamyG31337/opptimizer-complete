@@ -286,8 +286,8 @@ void RenderThread::run()
     double x, y, limit = 2.0;
     double Zr, Zi, Cr, Ci, Tr, Ti;
     FILE *output;
-    //output = fopen("/home/user/MyDocs/test.pbm", "w");
-    output = fopen("/dev/null", "w");
+    output = fopen("/home/user/MyDocs/test.pbm", "w");
+    //output = fopen("/dev/null", "w");
 
     w = h = testLength;
 
@@ -330,6 +330,14 @@ void RenderThread::run()
     fclose(output);
     int timeWasted = QDateTime::currentDateTime().secsTo(startTime) * -1;
     emit renderedImage(timeWasted);
+
+    //check file for corruption
+    QFile file("/home/user/MyDocs/test.pbm");
+    file.open(QIODevice::ReadOnly);
+    QByteArray fileData = file.readAll();
+    QByteArray hashData = QCryptographicHash::hash(fileData,QCryptographicHash::Md5);
+    qDebug() << hashData.toHex();
+
 
  //   mutex.lock();
  //   mutex.unlock();
