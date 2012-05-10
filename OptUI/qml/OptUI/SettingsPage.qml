@@ -25,6 +25,8 @@ Page{
     //this gets called the first time the page is loaded, once it's done setting all the default values
     Component.onCompleted: {
         console.debug("done loading settings page")
+        //try to load whichever one is set on startup
+        if (objQSettings.getValue("/settings/OcOnStartup/enabled",false)) selectedProfile = objQSettings.getValue("/settings/OcOnStartup/profile",0);
         reloadProfile();
     }
 

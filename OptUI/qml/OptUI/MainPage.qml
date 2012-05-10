@@ -6,9 +6,11 @@ Page {
     anchors.fill: parent
     tools: commonTools
     Component.onCompleted:{
-        if (headerSelectionDialog.selectedIndex == -1)
-            headerSelectionDialog.selectedIndex = 0;
-
+        //try to load whichever one is set on startup
+        if (objQSettings.getValue("/settings/OcOnStartup/enabled",false))
+            headerSelectionDialog.selectedIndex = objQSettings.getValue("/settings/OcOnStartup/profile",0);
+//        if (headerSelectionDialog.selectedIndex == -1)
+//            headerSelectionDialog.selectedIndex = 0;
     }
 
     Header {
