@@ -7,9 +7,12 @@ Page {
     tools: commonTools
     Component.onCompleted:{
         //try to load whichever one is set on startup
-        headerSelectionDialog.selectedIndex = parseInt(objQSettings.getValue("/settings/OcOnStartup/profile",0))
-        if (headerSelectionDialog.selectedIndex == -1)
-           headerSelectionDialog.selectedIndex = 0;
+        console.debug("MainPage completed...")
+//        headerSelectionDialog.selectedIndex = parseInt(objQSettings.getValue("/settings/OcOnStartup/profile",-1))
+//        if (headerSelectionDialog.selectedIndex == -1)
+//           headerSelectionDialog.selectedIndex = 0;
+//        settingsPage.selectedProfile = headerSelectionDialog.selectedIndex;
+//        settingsPage.reloadProfile();
     }
 
     Header {
@@ -59,8 +62,12 @@ Page {
                  text: "Settings"
                  onClicked: {
                     pageHeader.showIt();
-                    settingsPage.selectedProfile = headerSelectionDialog.selectedIndex;
+                    headerSelectionDialog.selectedIndex = parseInt(objQSettings.getValue("/settings/OcOnStartup/profile",-1))
+                    if (headerSelectionDialog.selectedIndex == -1)
+                         headerSelectionDialog.selectedIndex = 0;
                     pageHeader.title = "OPPtimizer: Profile " + (headerSelectionDialog.selectedIndex + 1);
+                    settingsPage.selectedProfile = headerSelectionDialog.selectedIndex;
+                    settingsPage.reloadProfile();
                  }
              }
          }

@@ -212,8 +212,10 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
            &objOpptimizerLog, SIGNAL(newLogInfo(QVariant)));
 
     viewer.setOrientation(QmlApplicationViewer::ScreenOrientationAuto);
+
     viewer.setMainQmlFile(QCoreApplication::applicationDirPath() +
                 QLatin1String("/../qml/optui/main.qml"));
+    qInstallMsgHandler(0);//workaround qt mobility bug 1902
     viewer.showFullScreen();
 
     return app->exec();
@@ -227,11 +229,7 @@ RenderThread::RenderThread(QObject *parent)
 
 RenderThread::~RenderThread()
 {
-  //  mutex.lock();
     abort = true;
-    //condition.wakeOne();
-  //  mutex.unlock();
-
     wait();
 }
 
@@ -248,16 +246,12 @@ void RenderThread::render(double testLength)
 
 void RenderThread::abortRender()
 {
- //   mutex.lock();
     this->abort = true;
- //   mutex.unlock();
 }
 
 void RenderThread::run()
 {
- //   mutex.lock();
     double testLength = this->testLength;
- //   mutex.unlock();
 
     //this function is adapted from http://shootout.alioth.debian.org/u32/program.php?test=mandelbrot&lang=gcc&id=2
     /*

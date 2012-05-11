@@ -1,3 +1,13 @@
+opptimizer-ui (1.2.3) unstable; urgency=low
+  * Benchmark validates output
+
+ -- Lance Colton <lance.colton@gmail.com>  Fri, 11 May 2012 00:00:00 -0600
+
+opptimizer-ui (1.2.2) unstable; urgency=low
+  * Fixed more bugs
+
+ -- Lance Colton <lance.colton@gmail.com>  Thu, 10 May 2012 18:30:00 -0600
+
 opptimizer-ui (1.2.1) unstable; urgency=low
   * load any on-boot profile as default in ui
 

@@ -2,7 +2,7 @@
 import QtQuick 1.1
 import com.nokia.meego 1.0
 import com.nokia.extras 1.0
-//import QtMobility.feedback 1.1
+import QtMobility.feedback 1.1
 
 Page{
     id: settingsPage
@@ -23,11 +23,12 @@ Page{
     }
 
     //this gets called the first time the page is loaded, once it's done setting all the default values
+    //seems to have stopped working now?? wtf. calling this stuff from main page also then
     Component.onCompleted: {
-        console.debug("done loading settings page")
+        console.debug("SettingsPage Completed...")
         //try to load whichever one is set on startup
-        selectedProfile = objQSettings.getValue("/settings/OcOnStartup/profile",0);
-        reloadProfile();
+        //selectedProfile = objQSettings.getValue("/settings/OcOnStartup/profile",0);
+        //reloadProfile();
     }
 
     function checkHistory(){
@@ -54,6 +55,7 @@ Page{
 
     //called on initial load and any time the profile is switched
     function reloadProfile(){
+        console.debug("SettingsPage reloading...")
         fnBlockEvents();//don't save anything while loading
         swCustomVolts.checked = objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false)
         swSmartReflex.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true)
@@ -197,27 +199,27 @@ Page{
         topMargin: 10
     }    
 
-//    Timer{
-//        id: playHapticsEventAgain
-//        onTriggered: testCompleteEffect.start();
-//        interval: 250
-//    }
+    Timer{
+        id: playHapticsEventAgain
+        onTriggered: testCompleteEffect.start();
+        interval: 250
+    }
 
-//    HapticsEffect{
-//        id: testCompleteEffect
-//        attackIntensity: 1.0
-//        attackTime: 0
-//        intensity: 1.0
-//        duration: 50
-//        fadeTime: 10
-//        fadeIntensity: 0.5
-//    }
+    HapticsEffect{
+        id: testCompleteEffect
+        attackIntensity: 1.0
+        attackTime: 0
+        intensity: 1.0
+        duration: 50
+        fadeTime: 10
+        fadeIntensity: 0.5
+    }
 
     Connections {
         target: objOpptimizerUtils
         onRenderedImageOut: {
-//            testCompleteEffect.start();
-//            playHapticsEventAgain.start();
+            testCompleteEffect.start();
+            playHapticsEventAgain.start();
             overlayBenchmarking.visible = false
             cbLastTest.value = timeWasted
             lblLastTestTime.text = "Completed in "
@@ -248,7 +250,7 @@ Page{
                 }
             })
             cbTestTotal.value += sliderTest.value;
-            //testCompleteEffect.stop();
+            testCompleteEffect.stop();
         }
         onBadImageOut: {
             cbLastTest.visible = false
@@ -368,9 +370,10 @@ Page{
                         sliderVolts.value = objOpptimizerUtils.getDefaultVoltage();
                         sliderVolts.enabled = false;
                     }
-                    else
+                    else{
                         sliderVolts.enabled = true;
-//                        parseInt(objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage()),10)
+                        parseInt(objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage()),10)
+                    }
                 }
             }
         }
