@@ -1,3 +1,8 @@
+opptimizer-ui (1.2.4) unstable; urgency=low
+  * Fixed haptics without breaking messagehandler
+
+ -- Lance Colton <lance.colton@gmail.com>  Fri, 11 May 2012 12:00:00 -0600
+
 opptimizer-ui (1.2.3) unstable; urgency=low
   * Benchmark validates output
 

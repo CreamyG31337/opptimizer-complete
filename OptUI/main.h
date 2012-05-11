@@ -22,6 +22,9 @@
 #include <QMap>
 #include <QFile>
 #include <QFileInfo>
+#include <QtNetwork>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
 
 
 class OpptimizerLog : public QObject
@@ -70,16 +73,21 @@ public:
     Q_INVOKABLE QString applySettings(int reqFreq, int reqVolt, bool SREnable, bool changeVolt);
     Q_INVOKABLE void testSettings(int testLength);
     Q_INVOKABLE void stopBenchmark();
+    Q_INVOKABLE void startCheckForUpdates();
 private:
     QString lastOPPtimizerStatus;
     QString lastSmartReflexStatus;
     RenderThread thread;
+    QNetworkAccessManager *netManager;
+public slots:
+    void updateCheckReply(QNetworkReply* reply);
 signals:
     void newLogInfo(const QVariant &LogText);
     void renderedImageOut(int timeWasted);
     void badImageOut();
-    void testStatus(int val);
+    void testStatus(int val);    
 };
+
 
 //annoying wrapper class for qsettings
 class MySettings : public QObject

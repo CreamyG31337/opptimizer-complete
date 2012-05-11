@@ -114,7 +114,8 @@ Page {
                     settingsPage.selectedProfile = headerSelectionDialog.selectedIndex;
                     settingsPage.fixOCEnabled();
                 }}
-            MenuItem { text: qsTr("Invert Colors"); onClicked: { theme.inverted = !theme.inverted; objQSettings.setValue("/settings/THEME/inverted", theme.inverted)}}
+            MenuItem { text: qsTr("Invert colors"); onClicked: { theme.inverted = !theme.inverted; objQSettings.setValue("/settings/THEME/inverted", theme.inverted)}}
+            MenuItem { text: qsTr("Check for updates"); onClicked: { objOpptimizerUtils.startCheckForUpdates()}}
             MenuItem { text: qsTr("About OPPtimizer"); onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))}
         }
     }

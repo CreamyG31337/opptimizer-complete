@@ -38,7 +38,9 @@ QString OpptimizerUtils::applySettings(int reqFreq, int reqVolt, bool SREnable, 
         return "Frequency Updated";
 }
 
-OpptimizerUtils::OpptimizerUtils(QObject *parent){
+OpptimizerUtils::OpptimizerUtils(QObject *parent):
+    netManager(new QNetworkAccessManager(this))
+{
     QObject::connect(&thread, SIGNAL(renderedImage(int)),
            this, SIGNAL(renderedImageOut(int)));
     QObject::connect(&thread, SIGNAL(badImage()),
@@ -55,6 +57,41 @@ void OpptimizerUtils::testSettings(int testLength)
 void OpptimizerUtils::stopBenchmark()
 {
     thread.abortRender();
+}
+
+void OpptimizerUtils::startCheckForUpdates()
+{
+    qDebug() << "checking for updates";
+    QNetworkRequest *req;
+    req = new QNetworkRequest(QUrl("http://talk.maemo.org/showthread.php?t=83357"));
+    connect(netManager,SIGNAL(finished(QNetworkReply*)),
+            this, SLOT(updateCheckReply(QNetworkReply*)));
+    req->setRawHeader("User-Agent","Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1");
+    netManager->get(*req);
+}
+
+void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
+{
+    qDebug() << "got reply";
+    QString strReply = reply->readAll();
+    QString kmVer = "unknown";
+    QString uiVer = "unknown";
+    //qDebug() << strReply;
+    QRegExp regex;
+    regex.setPattern("\\[ko v(\\d(\\.\\d)+)\\]");
+    if (regex.indexIn(strReply) != -1){
+        kmVer = regex.cap(1);
+        qDebug() << kmVer;
+    }else{
+        qDebug() << "ko version not found";
+    }
+    regex.setPattern("\\[ui v(\\d(\\.\\d)+)\\]");
+    if (regex.indexIn(strReply) != -1){
+        uiVer = regex.cap(1);
+        qDebug() << kmVer;
+    }else{
+        qDebug() << "ui version not found";
+    }
 }
 
 void OpptimizerUtils::refreshStatus(){
@@ -217,6 +254,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
                 QLatin1String("/../qml/optui/main.qml"));
     qInstallMsgHandler(0);//workaround qt mobility bug 1902
     viewer.showFullScreen();
+
 
     return app->exec();
 }
