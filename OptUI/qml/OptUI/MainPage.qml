@@ -7,7 +7,7 @@ Page {
     tools: commonTools
     Component.onCompleted:{
         //try to load whichever one is set on startup
-        headerSelectionDialog.selectedIndex = objQSettings.getValue("/settings/OcOnStartup/profile",0)
+        headerSelectionDialog.selectedIndex = parseInt(objQSettings.getValue("/settings/OcOnStartup/profile",0))
     }
 
     Header {

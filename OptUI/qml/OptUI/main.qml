@@ -79,10 +79,11 @@ PageStackWindow {
                 id: btnAbortTest
                 anchors{
                     bottom: parent.bottom
-                    horizontalCenter: parent.horizontalCenter                    
+                    horizontalCenter: parent.horizontalCenter
+                    bottomMargin: 25
                 }
                 text: "Stop test"
-                width: parent.width - 30
+                width: parent.width - 50
                 height: parent.height / 3
                 onClicked: {
                     objOpptimizerUtils.stopBenchmark();                    

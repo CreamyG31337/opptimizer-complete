@@ -41,6 +41,8 @@ QString OpptimizerUtils::applySettings(int reqFreq, int reqVolt, bool SREnable, 
 OpptimizerUtils::OpptimizerUtils(QObject *parent){
     QObject::connect(&thread, SIGNAL(renderedImage(int)),
            this, SIGNAL(renderedImageOut(int)));
+    QObject::connect(&thread, SIGNAL(badImage()),
+           this, SIGNAL(badImageOut()));
     QObject::connect(&thread, SIGNAL(updateStatus(int)),
            this, SIGNAL(testStatus(int)));
 }
@@ -285,13 +287,30 @@ void RenderThread::run()
     int i, iter = 50;
     double x, y, limit = 2.0;
     double Zr, Zi, Cr, Ci, Tr, Ti;
-    FILE *output;
-    output = fopen("/home/user/MyDocs/test.pbm", "w");
-    //output = fopen("/dev/null", "w");
+
+    QFile file("/home/user/MyDocs/test.pbm");
+    if (file.exists()){
+        //delete it
+        file.remove();
+        qDebug() << "deleted existing file";
+    }
+    int fOpenErr = file.open(QIODevice::WriteOnly);
+    if (!fOpenErr){
+        //handle mydocs not mounted
+        //not sure why but this isn't happening, and the hashes are ok even when i have mass usb on...
+        qDebug() << "failed to open 1";
+        file.setFileName("/tmp/test.pbm");
+        fOpenErr = file.open(QIODevice::WriteOnly);
+        if (!fOpenErr){
+            //log this error somehow
+            emit badImage();
+            return;
+        }
+    }
 
     w = h = testLength;
-
-    fprintf(output,"P4\n%d %d\n",w,h);
+    QString header = "P4\n" + QString::number(w) + " " + QString::number(h) + "\n";
+    file.write(header.toAscii().data());
 
     for(y=0;y<h;++y)
     {
@@ -315,31 +334,88 @@ void RenderThread::run()
             if(Tr+Ti <= limit*limit) byte_acc |= 0x01;
             ++bit_num;
             if(bit_num == 8){
-                putc(byte_acc,output);
+                file.putChar(byte_acc);
                 byte_acc = 0;
                 bit_num = 0;
             }
             else if(x == w-1){
                 byte_acc <<= (8-w%8);
-                putc(byte_acc,output);
+                file.putChar(byte_acc);
                 byte_acc = 0;
                 bit_num = 0;
             }
         }
     }
-    fclose(output);
-    int timeWasted = QDateTime::currentDateTime().secsTo(startTime) * -1;
-    emit renderedImage(timeWasted);
 
     //check file for corruption
-    QFile file("/home/user/MyDocs/test.pbm");
-    file.open(QIODevice::ReadOnly);
+    file.close();
+    fOpenErr = file.open(QIODevice::ReadOnly);
     QByteArray fileData = file.readAll();
     QByteArray hashData = QCryptographicHash::hash(fileData,QCryptographicHash::Md5);
     qDebug() << hashData.toHex();
+    file.close();
+    file.remove();
 
+    QString correctHash;
+    switch(w)
+    {
+    case 1000:
+        correctHash = "9beadc69396d01081a98cf5dc057ce89"; //
+        break;
+    case 2000:
+        correctHash = "520440dc03a35e6a4905061229e99a45";
+        break;
+    case 3000:
+        correctHash = "b81a92d242a6db5a7672101ea13e5c4f";
+        break;
+    case 4000:
+        correctHash = "9ef33c29e6913ffe3c5803ea97544851";
+        break;
+    case 5000:
+        correctHash = "a4c926b20ac187b547341e311308aa4b";
+        break;
+    case 6000:
+        correctHash = "7dd6d56ab21148f6da5f442071edc5ba";
+        break;
+    case 7000:
+        correctHash = "6ac610a176485e3dcda1fd4ecbec306c";
+        break;
+    case 8000:
+        correctHash = "cbe14e3cc1946a30df41ea35cf209b06";
+        break;
+    case 9000:
+        correctHash = "f180de709f9a1bee6a39f454c9b89157";
+        break;
+    case 10000:
+        correctHash = "faa55b467c916be03c2d3f0b44a08c53";
+        break;
+    case 11000:
+        correctHash = "53fe7793de046ce6b565d46da28213ba";
+        break;
+    case 12000:
+        correctHash = "625bd26099fc27b2ef4bb7f0e5410724";
+        break;
+    case 13000:
+        correctHash = "766c3517f3e666dc776966bcdf29cb88";
+        break;
+    case 14000:
+        correctHash = "74bf0b35f3584df720d4f78ab6133a21";
+        break;
+    case 15000:
+        correctHash = "0c4adf644178fa876319f24a9b0451b4";
+        break;
+    case 16000:
+        correctHash = "8c2ed8883de64eccd3154ac612021fe8";
+        break;
+    }
 
- //   mutex.lock();
- //   mutex.unlock();
+    if ( hashData.toHex() == correctHash){
+        int timeWasted = QDateTime::currentDateTime().secsTo(startTime) * -1;
+        emit renderedImage(timeWasted);
+    }
+    else{
+        emit badImage();
+        //something is wrong
+    }
 }
 

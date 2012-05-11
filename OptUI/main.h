@@ -44,6 +44,7 @@ public slots:
 signals:
     void renderedImage(int timeWasted);
     void updateStatus(int val);
+    void badImage();
 protected:
     void run();
 private:
@@ -76,6 +77,7 @@ private:
 signals:
     void newLogInfo(const QVariant &LogText);
     void renderedImageOut(int timeWasted);
+    void badImageOut();
     void testStatus(int val);
 };
 

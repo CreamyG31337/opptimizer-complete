@@ -59,12 +59,13 @@ Page{
         swSmartReflex.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true)
         sliderVolts.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage())
         checkHistory();
-        fnBlockEvents();//just in case
         fixOCEnabled();
     }
 
     //sets OCEnabled switch depending on voltage and frequency. set while being dragged by user so no extra processing here
     function fixOCEnabled(){
+        blockEvents.stop(); //no save code in oc on boot switch, not needed.
+        badChoice.state = "OK"
         //is this profile supposed to be enabled on boot if possible?
         var enableOnBoot = false;
         if (objQSettings.getValue("/settings/OcOnStartup/profile",-1) == selectedProfile)
@@ -87,9 +88,7 @@ Page{
             //rejected because crashed at lower freq and same voltage
             swOCEnabled.enabled = false;
             swOCEnabled.checked = false;
-            infoMessageBanner.hide();
-            infoMessageBanner.text = "This combo seems unstable! Proceed with caution!";
-            infoMessageBanner.show();
+            badChoice.state = "BAD"
             console.debug("Disabled and unchecked OC on boot because crashed at same or lower freq and same voltage")
             return;
         }
@@ -221,8 +220,10 @@ Page{
 //            playHapticsEventAgain.start();
             overlayBenchmarking.visible = false
             cbLastTest.value = timeWasted
+            lblLastTestTime.text = "Completed in "
             infoMessageBanner.text = "Testing completed. Saving...";
             infoMessageBanner.show();
+            badChoice.state = "OK"
             if (swOCEnabled.checked){
                 objQSettings.setValue("/settings/OcOnStartup/profile",selectedProfile)
             }else{
@@ -244,13 +245,24 @@ Page{
                     console.debug("updated this combo from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
                     //also validate any rows with same voltage but lower freq
                     //tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency<=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
-
                 }
             })
             cbTestTotal.value += sliderTest.value;
-            testCompleteEffect.stop();
+            //testCompleteEffect.stop();
         }
-
+        onBadImageOut: {
+            cbLastTest.visible = false
+            badChoice.visible = true;
+            lblLastTestTime.text = 'FAILED'
+            badChoice.state = "BAD"
+            overlayBenchmarking.visible = false
+            cbLastTest.value = 0
+            infoMessageBanner.text = "Testing FAILED! Invalid data was detected.";
+            infoMessageBanner.show();
+            infoMessageBanner.timerShowTime = 9000;
+            swOCEnabled.checked = false
+            swOCEnabled.enabled = false
+        }
     }
 
     //call this if the test is stopped for some reason without crashing to remove suspected crashes from db
@@ -303,14 +315,15 @@ Page{
                             infoMessageBanner.topMargin = 200
                         }else{
                             swOCEnabled.checked = !swOCEnabled.checked
-                            if (swOCEnabled.checked)
+                            if (swOCEnabled.checked){
                                 objQSettings.setValue("/settings/OcOnStartup/profile", selectedProfile)
-                            else
+                            }else{
                                 objQSettings.setValue("/settings/OcOnStartup/profile", -1)
-                                infoMessageBanner.text = "Saved..."
-                                console.debug("saved startup key settings: " + swOCEnabled.checked.toString() + " " + selectedProfile.toString())
-                                infoMessageBanner.show();
-                                infoMessageBanner.topMargin = 200
+                            }
+                            infoMessageBanner.text = "Saved..."
+                            console.debug("saved startup key settings: " + swOCEnabled.checked.toString() + " " + selectedProfile.toString())
+                            infoMessageBanner.show();
+                            infoMessageBanner.topMargin = 200
                         }
                     }
                 }
@@ -320,9 +333,6 @@ Page{
                     id: swOCEnabled
                     checked: false
                     enabled: cbTestTotal.value >= 15000
-                    onCheckedChanged:{//wow this crappy harmattan QML is missing both the pressed and clicked events and properties for switches.
-
-                    }
                 }
             }
         }
@@ -493,10 +503,10 @@ Page{
             anchors{
                 top: sliderVolts.bottom
                 horizontalCenter: parent.horizontalCenter
+                topMargin: 25
             }
             text: "OPPtimize!"
             width: 200
-            anchors.topMargin: 25
             onClicked: {
                 var warningmessage = "";
                 if (dangerVolts){ warningmessage += "Voltage"; }
@@ -509,12 +519,45 @@ Page{
                     startApply();
             }
             style: NegativeButtonStyle {}
+
+        }
+        Item{
+            id: badChoice
+            anchors{
+                left: parent.left
+                right: parent.right
+                top: btnApply.bottom
+            }
+            state: "OK"
+            height: 0
+            states: [
+                State {
+                    name: "BAD"
+                    PropertyChanges { target: badChoice; height: 25 }
+                    PropertyChanges { target: lblBadChoice; opacity: 100; anchors.topMargin: 10 }
+                },
+                State {
+                    name: "OK"
+                    PropertyChanges { target: badChoice; height: 0 }
+                    PropertyChanges { target: lblBadChoice; opacity: 0; anchors.topMargin: 0 }
+                }
+            ]
+            transitions: Transition {
+                PropertyAnimation { properties: "height,opacity,anchors.topMargin"; easing.type: Easing.InOutQuad }
+            }
+            Label {
+                id: lblBadChoice
+                text: "THIS COMBINATION PROBABLY CRASHED"
+                anchors{
+                    horizontalCenter: parent.horizontalCenter
+                }
+            }
         }
 
         Label {
             id: lblTestLength1
             anchors{
-                top: btnApply.bottom
+                top: badChoice.bottom
                 left: parent.left
                 topMargin: 35
             }
@@ -534,7 +577,7 @@ Page{
         Label {
             id: lblTestLength2
             anchors{
-                top: btnApply.bottom
+                top: badChoice.bottom
                 left: cbTest.right
                 topMargin: 35
             }
