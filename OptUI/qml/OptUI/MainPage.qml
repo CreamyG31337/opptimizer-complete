@@ -8,6 +8,8 @@ Page {
     Component.onCompleted:{
         //try to load whichever one is set on startup
         headerSelectionDialog.selectedIndex = parseInt(objQSettings.getValue("/settings/OcOnStartup/profile",0))
+        if (headerSelectionDialog.selectedIndex == -1)
+           headerSelectionDialog.selectedIndex = 0;
     }
 
     Header {
@@ -57,6 +59,7 @@ Page {
                  text: "Settings"
                  onClicked: {
                     pageHeader.showIt();
+                    settingsPage.selectedProfile = headerSelectionDialog.selectedIndex;
                     pageHeader.title = "OPPtimizer: Profile " + (headerSelectionDialog.selectedIndex + 1);
                  }
              }
