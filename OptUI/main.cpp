@@ -3,6 +3,7 @@
 #include "main.h"
 #include <QtCore/qmath.h>
 
+
 MySettings::MySettings():
     qsettInternal(new QSettings("/home/user/.config/FakeCompany/OPPtimizer.conf",QSettings::NativeFormat,this))
 {
@@ -70,13 +71,22 @@ void OpptimizerUtils::startCheckForUpdates()
     netManager->get(*req);
 }
 
+QString OpptimizerUtils::getVersionString() const
+{
+    return strVersion;
+}
+
+void OpptimizerUtils::setVersionString(QString versionString)
+{
+    strVersion = versionString;
+}
+
 void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
 {
     qDebug() << "got reply";
     QString strReply = reply->readAll();
     QString kmVer = "unknown";
     QString uiVer = "unknown";
-    //qDebug() << strReply;
     QRegExp regex;
     regex.setPattern("\\[ko v(\\d(\\.\\d)+)\\]");
     if (regex.indexIn(strReply) != -1){
@@ -88,10 +98,19 @@ void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
     regex.setPattern("\\[ui v(\\d(\\.\\d)+)\\]");
     if (regex.indexIn(strReply) != -1){
         uiVer = regex.cap(1);
-        qDebug() << kmVer;
+        qDebug() << uiVer;
     }else{
         qDebug() << "ui version not found";
     }
+
+    int localUIVersion = strVersion.replace(".","").toInt();
+    int webVersion =  uiVer.replace(".","").toInt();
+    if (webVersion > localUIVersion){
+        //notify new ui version available
+    }else{
+        //notify current ui version is newest
+    }
+
 }
 
 void OpptimizerUtils::refreshStatus(){
@@ -231,10 +250,13 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
     QCoreApplication::setOrganizationName("FakeCompany");
     QCoreApplication::setOrganizationDomain("appcheck.net");
     QCoreApplication::setApplicationName("OPPtimizer");
+    #include "version.inc"
 
     MySettings objSettings;
     OpptimizerUtils objOpptimizerUtils;
     OpptimizerLog objOpptimizerLog;
+
+    objOpptimizerUtils.setVersionString(versionString);//from included file above
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
     QmlApplicationViewer viewer;
@@ -254,7 +276,6 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
                 QLatin1String("/../qml/optui/main.qml"));
     qInstallMsgHandler(0);//workaround qt mobility bug 1902
     viewer.showFullScreen();
-
 
     return app->exec();
 }

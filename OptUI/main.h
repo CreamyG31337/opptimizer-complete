@@ -60,6 +60,7 @@ private:
 class OpptimizerUtils : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY( QString version READ getVersionString WRITE setVersionString )
 public:
     OpptimizerUtils(QObject *parent = 0);
     Q_INVOKABLE QString getModuleVersion();
@@ -74,11 +75,14 @@ public:
     Q_INVOKABLE void testSettings(int testLength);
     Q_INVOKABLE void stopBenchmark();
     Q_INVOKABLE void startCheckForUpdates();
+    Q_INVOKABLE QString getVersionString() const;
+    Q_INVOKABLE void setVersionString(QString versionString);
 private:
     QString lastOPPtimizerStatus;
     QString lastSmartReflexStatus;
     RenderThread thread;
     QNetworkAccessManager *netManager;
+    QString strVersion;
 public slots:
     void updateCheckReply(QNetworkReply* reply);
 signals:
