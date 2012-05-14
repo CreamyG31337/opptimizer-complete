@@ -71,44 +71,81 @@ void OpptimizerUtils::startCheckForUpdates()
     netManager->get(*req);
 }
 
-QString OpptimizerUtils::getVersionString() const
+QString OpptimizerUtils::getUiVersionString() const
 {
-    return strVersion;
+    return strUiVersion;
 }
 
-void OpptimizerUtils::setVersionString(QString versionString)
+void OpptimizerUtils::setUiVersionString(QString versionString)
 {
-    strVersion = versionString;
+
+    strUiVersion = versionString;
+}
+
+QString OpptimizerUtils::getKoVersionString() const
+{
+    return strKoVersion;
+}
+
+void OpptimizerUtils::setKoVersionString(QString versionString)
+{
+    strKoVersion = versionString;
 }
 
 void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
 {
     qDebug() << "got reply";
+    qDebug() << reply->errorString() ;
     QString strReply = reply->readAll();
-    QString kmVer = "unknown";
-    QString uiVer = "unknown";
+
+    disconnect(netManager,SIGNAL(finished(QNetworkReply*)),
+            this, SLOT(updateCheckReply(QNetworkReply*)));
+    reply->deleteLater();
+    QString strWebKoVer = "unknown";
+    QString strWebUiVer = "unknown";
+    QString strMessage = "";
     QRegExp regex;
+    //get ko version string from web
     regex.setPattern("\\[ko v(\\d(\\.\\d)+)\\]");
     if (regex.indexIn(strReply) != -1){
-        kmVer = regex.cap(1);
-        qDebug() << kmVer;
+        strWebKoVer = regex.cap(1);
+        qDebug() << strWebKoVer;
     }else{
-        qDebug() << "ko version not found";
+        qDebug() << "ko version not found" << strReply;
+        emit noNewVersion("there was an error, please try again later");
+        return;
     }
+    //get ui version string from web
     regex.setPattern("\\[ui v(\\d(\\.\\d)+)\\]");
     if (regex.indexIn(strReply) != -1){
-        uiVer = regex.cap(1);
-        qDebug() << uiVer;
+        strWebUiVer = regex.cap(1);
+        qDebug() << strWebUiVer;
     }else{
-        qDebug() << "ui version not found";
+        qDebug() << "ui version not found" << strReply;
+        emit noNewVersion("there was an error, please try again later");
+        return;
     }
 
-    int localUIVersion = strVersion.replace(".","").toInt();
-    int webVersion =  uiVer.replace(".","").toInt();
-    if (webVersion > localUIVersion){
-        //notify new ui version available
+    //convert ko web string to int and compare local
+    int localKoVersion = strKoVersion.replace(".","").toInt();
+    int webKoVersion =  strWebKoVer.replace(".","").toInt();
+    if (webKoVersion > localKoVersion){
+        strMessage += "New kernel module version " + strWebKoVer + "is available.\n";
     }else{
-        //notify current ui version is newest
+        strMessage += "Kernel module does not need updating\n";
+    }
+    //convert ui web string to int and compare local
+    int localUIVersion = strUiVersion.replace(".","").toInt();
+    int webUiVersion =  strWebUiVer.replace(".","").toInt();
+    if (webUiVersion > localUIVersion){
+        strMessage += "New UI version " + strWebUiVer + "is available.\n";
+    }else{
+        strMessage += "UI does not need updating\n";
+    }
+    if (strMessage.contains("available")){
+        emit newVersion(strMessage);
+    }else{
+        emit noNewVersion("No new updates available.\n");
     }
 
 }
@@ -154,7 +191,8 @@ QString OpptimizerUtils::getModuleVersion(){
     QRegExp rx("\\Wv(\\d+(\\.\\d+)+)");
     int pos = rx.indexIn(lastOPPtimizerStatus);
     if (pos > -1) {
-        return rx.cap(1);
+        setKoVersionString(rx.cap(1));
+        return strKoVersion;
     }
     else
         return "Unknown";
@@ -256,7 +294,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]){
     OpptimizerUtils objOpptimizerUtils;
     OpptimizerLog objOpptimizerLog;
 
-    objOpptimizerUtils.setVersionString(versionString);//from included file above
+    objOpptimizerUtils.setUiVersionString(versionString);//from included file above
 
     QScopedPointer<QApplication> app(createApplication(argc, argv));
     QmlApplicationViewer viewer;
@@ -297,7 +335,6 @@ void RenderThread::render(double testLength)
     QMutexLocker locker(&mutex);
     this->testLength = testLength;
     this->abort = false;
-
     if (!isRunning()) {
         start(NormalPriority);//low is too low to stress cpu
     }

@@ -93,10 +93,59 @@ PageStackWindow {
             }
         }
     }
+    Dialog {
+        id: updateDialog
+        title:
+            Label{
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+                text: "Update check complete"
+            }
+        content:
+            Item {
+                id: name
+                height: 50
+                width: parent.width
+                Text {
+                    id: dialogContentText
+                    font.pixelSize: 22
+                    anchors.centerIn: parent
+                    color: "white"
+                    text: "err"
+                }
+            }
+        buttons:
+            ButtonRow {
+                style: ButtonStyle { }
+                anchors.horizontalCenter: parent.horizontalCenter
+                Button {id: btn1; visible: false; text: "OK"; onClicked: updateDialog.reject()}
+                Button {id: btn2; visible: false; text: "Yes"; onClicked: updateDialog.accept()}
+                Button {id: btn3; visible: false; text: "No"; onClicked: updateDialog.reject()}
+            }
+        onAccepted: {
+          Qt.openUrlExternally("http://talk.maemo.org/showthread.php?t=83357")
+        }
+    }
     Connections {
         target: objOpptimizerUtils
         onTestStatus: {
             testProgress.value = val
+        }
+        onNewVersion: {
+            dialogContentText.text = message
+            btn1.visible = false;
+            btn2.visible = true;
+            btn3.visible = true;
+            updateDialog.open();
+        }
+        onNoNewVersion: {
+            dialogContentText.text = message
+            btn1.visible = true;
+            btn2.visible = false;
+            btn3.visible = false;
+            updateDialog.open();
         }
     }
 }
