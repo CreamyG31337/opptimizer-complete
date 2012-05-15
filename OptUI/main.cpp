@@ -97,18 +97,19 @@ void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
     qDebug() << "got reply";
     qDebug() << reply->errorString() ;
     QString strReply = reply->readAll();
-
     disconnect(netManager,SIGNAL(finished(QNetworkReply*)),
             this, SLOT(updateCheckReply(QNetworkReply*)));
     reply->deleteLater();
     QString strWebKoVer = "unknown";
+    QString strWebKoVer2 = "";
     QString strWebUiVer = "unknown";
+    QString strWebUiVer2 = "";
     QString strMessage = "";
     QRegExp regex;
     //get ko version string from web
     regex.setPattern("\\[ko v(\\d(\\.\\d)+)\\]");
     if (regex.indexIn(strReply) != -1){
-        strWebKoVer = regex.cap(1);
+        strWebKoVer2 = strWebKoVer = regex.cap(1);
         qDebug() << strWebKoVer;
     }else{
         qDebug() << "ko version not found" << strReply;
@@ -118,11 +119,11 @@ void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
     //get ui version string from web
     regex.setPattern("\\[ui v(\\d(\\.\\d)+)\\]");
     if (regex.indexIn(strReply) != -1){
-        strWebUiVer = regex.cap(1);
+        strWebUiVer2 = strWebUiVer = regex.cap(1);
         qDebug() << strWebUiVer;
     }else{
         qDebug() << "ui version not found" << strReply;
-        emit noNewVersion("there was an error, please try again later");
+        emit noNewVersion("There was an error checking for updates, please try again later.");
         return;
     }
 
@@ -130,24 +131,24 @@ void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
     int localKoVersion = strKoVersion.replace(".","").toInt();
     int webKoVersion =  strWebKoVer.replace(".","").toInt();
     if (webKoVersion > localKoVersion){
-        strMessage += "New kernel module version " + strWebKoVer + "is available.\n";
+        strMessage += "New kernel module version " + strWebKoVer2 + " is available.\n";
     }else{
-        strMessage += "Kernel module does not need updating\n";
+        strMessage += "Kernel module does not need updating.\n";
     }
     //convert ui web string to int and compare local
     int localUIVersion = strUiVersion.replace(".","").toInt();
     int webUiVersion =  strWebUiVer.replace(".","").toInt();
     if (webUiVersion > localUIVersion){
-        strMessage += "New UI version " + strWebUiVer + "is available.\n";
+        strMessage += "New UI version " + strWebUiVer2 + " is available.\n";
     }else{
-        strMessage += "UI does not need updating\n";
+        strMessage += "UI does not need updating.\n";
     }
     if (strMessage.contains("available")){
+        strMessage += "Go to download page?";
         emit newVersion(strMessage);
     }else{
         emit noNewVersion("No new updates available.\n");
     }
-
 }
 
 void OpptimizerUtils::refreshStatus(){

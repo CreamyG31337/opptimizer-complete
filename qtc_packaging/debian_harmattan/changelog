@@ -1,3 +1,8 @@
+opptimizer-ui (1.2.5) unstable; urgency=low
+  * Can inform user of any new updates
+
+ -- Lance Colton <lance.colton@gmail.com>  Mon, 14 May 2012 22:00:00 -0600
+
 opptimizer-ui (1.2.4) unstable; urgency=low
   * Fixed haptics without breaking messagehandler
 

@@ -1,3 +1,4 @@
+import QtMobility.systeminfo 1.1
 import QtQuick 1.1
 import com.nokia.meego 1.0
 
@@ -5,10 +6,15 @@ PageStackWindow {
     id: appWindow
     initialPage: mainPage
     anchors.margins: UiConstants.DefaultMargin
+
     Component.onCompleted: {
         theme.inverted = objQSettings.getValue("/settings/THEME/inverted",true)
-        theme.colorScheme = "darkOrange"        
+        theme.colorScheme = "darkOrange"
+        if (myNetInfo.networkStatus == "Connected" || myNetInfo.networkStatus == "Home Network"){
+            objOpptimizerUtils.startCheckForUpdates()
+        }
     }
+
     MainPage {
         id: mainPage
     }
@@ -28,6 +34,7 @@ PageStackWindow {
             horizontalAlignment: Text.AlignHCenter
         }
     }
+
     Rectangle {//just prevent people touching things when they shouldn't without me
         //having to enable/disable controls individually
         id: overlayBlocker
@@ -38,6 +45,7 @@ PageStackWindow {
             anchors.fill: parent
         }
     }
+
     Item{
         id: overlayBenchmarking
         z:98
@@ -93,31 +101,47 @@ PageStackWindow {
             }
         }
     }
+
     Dialog {
         id: updateDialog
         title:
-            Label{
-                anchors {
-                    left: parent.left
-                    right: parent.right
+            Item{
+            width: parent.width
+            height: 100
+                Label{
+                id: dialogTitle
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        centerIn: parent
+                    }
+                    text: "Update check complete"
+                    font{
+                        bold: true
+                        pixelSize: 26
+                    }
                 }
-                text: "Update check complete"
             }
         content:
             Item {
                 id: name
-                height: 50
                 width: parent.width
-                Text {
+                height: 200
+                Label {
                     id: dialogContentText
                     font.pixelSize: 22
-                    anchors.centerIn: parent
-                    color: "white"
+                    anchors{
+                        left: parent.left
+                        right: parent.right
+                        centerIn: parent
+                    }
                     text: "err"
                 }
             }
         buttons:
             ButtonRow {
+                id: btnRow
+                height: 100
                 style: ButtonStyle { }
                 anchors.horizontalCenter: parent.horizontalCenter
                 Button {id: btn1; visible: false; text: "OK"; onClicked: updateDialog.reject()}
@@ -128,6 +152,7 @@ PageStackWindow {
           Qt.openUrlExternally("http://talk.maemo.org/showthread.php?t=83357")
         }
     }
+
     Connections {
         target: objOpptimizerUtils
         onTestStatus: {
@@ -138,14 +163,23 @@ PageStackWindow {
             btn1.visible = false;
             btn2.visible = true;
             btn3.visible = true;
+            btnRow.checkedButton = null
             updateDialog.open();
         }
         onNoNewVersion: {
-            dialogContentText.text = message
-            btn1.visible = true;
-            btn2.visible = false;
-            btn3.visible = false;
-            updateDialog.open();
+            if (mainPage.manualUpdate == "Y")
+            {
+                dialogContentText.text = message
+                btn1.visible = true;
+                btn2.visible = false;
+                btn3.visible = false;
+                btnRow.checkedButton = null
+                updateDialog.open();
+            }
         }
+    }
+
+    NetworkInfo {
+        id: myNetInfo
     }
 }

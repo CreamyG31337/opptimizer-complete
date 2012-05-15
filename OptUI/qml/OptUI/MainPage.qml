@@ -5,20 +5,18 @@ Page {
     id: mainPage
     anchors.fill: parent
     tools: commonTools
+    //default of N stops dialog from showing up when auto checking for updates on startup unless an update was found
+    property string manualUpdate: "N"
+
     Component.onCompleted:{
-        //try to load whichever one is set on startup
         console.debug("MainPage completed...")
-//        headerSelectionDialog.selectedIndex = parseInt(objQSettings.getValue("/settings/OcOnStartup/profile",-1))
-//        if (headerSelectionDialog.selectedIndex == -1)
-//           headerSelectionDialog.selectedIndex = 0;
-//        settingsPage.selectedProfile = headerSelectionDialog.selectedIndex;
-//        settingsPage.reloadProfile();
     }
 
     Header {
         id: pageHeader
         title: "OPPtimizer"
     }
+
     SelectionDialog {
         id: headerSelectionDialog
         titleText: "Choose Profile"
@@ -35,6 +33,7 @@ Page {
             settingsPage.reloadProfile();
         }
     }
+
     ToolBarLayout {
          id: commonTools
          anchors{
@@ -76,7 +75,8 @@ Page {
              anchors.right: (parent === undefined) ? undefined : parent.right
              onClicked: (myMenu.status == DialogStatus.Closed) ? myMenu.open() : myMenu.close()
          }
-     }
+    }
+
     TabGroup {
         id: tabGroup
         currentTab: statusPage
@@ -98,6 +98,7 @@ Page {
             }
         }
     }
+
     Menu {
         id: myMenu
         visualParent: pageStack
@@ -115,13 +116,15 @@ Page {
                     settingsPage.fixOCEnabled();
                 }}
             MenuItem { text: qsTr("Invert colors"); onClicked: { theme.inverted = !theme.inverted; objQSettings.setValue("/settings/THEME/inverted", theme.inverted)}}
-            MenuItem { text: qsTr("Check for updates"); onClicked: { objOpptimizerUtils.startCheckForUpdates()}}
+            MenuItem { text: qsTr("Check for updates"); onClicked: { objOpptimizerUtils.startCheckForUpdates(); manualUpdate = "Y"}}
             MenuItem { text: qsTr("About OPPtimizer"); onClicked: pageStack.push(Qt.resolvedUrl("AboutPage.qml"))}
         }
     }
+
     function settingsStartApply(){
         settingsPage.startApply();
     }
+
     function settingsAbortTest(){
         settingsPage.testAborted();
     }
