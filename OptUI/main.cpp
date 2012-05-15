@@ -136,7 +136,8 @@ void OpptimizerUtils::updateCheckReply(QNetworkReply * reply)
         strMessage += "Kernel module does not need updating.\n";
     }
     //convert ui web string to int and compare local
-    int localUIVersion = strUiVersion.replace(".","").toInt();
+    QString strUiVersion2 = strUiVersion; //don't touch original
+    int localUIVersion = strUiVersion2.replace(".","").toInt();
     int webUiVersion =  strWebUiVer.replace(".","").toInt();
     if (webUiVersion > localUIVersion){
         strMessage += "New UI version " + strWebUiVer2 + " is available.\n";

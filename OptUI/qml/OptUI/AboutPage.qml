@@ -48,12 +48,13 @@ Page{
     Label{
         id: lblLinkDonate2
         text: "PayPal"
+        width: parent.width
         anchors{
             horizontalCenter: parent.horizontalCenter
             leftMargin: 10
-            left: lblLinkDonate.right
             top: lblDonate.bottom
         }
+        horizontalAlignment: Text.AlignHCenter
         font.underline: true
         color: "steelblue"
         MouseArea{
@@ -69,7 +70,7 @@ Page{
 
     Label{
         id: lblVersion
-        text: "OPPtimizer version " + objOpptimizerUtils.getVersionString() + "\nCreated by Lance Colton"
+        text: "OPPtimizer version " + objOpptimizerUtils.getUiVersionString() + "\nCreated by Lance Colton"
         anchors{
             top: lblLinkDonate2.bottom
             horizontalCenter: parent.horizontalCenter
