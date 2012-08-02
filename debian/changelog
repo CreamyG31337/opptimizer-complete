@@ -1,3 +1,40 @@
+opptimizer-ui (1.2.6) unstable; urgency=low
+  * Fixed bug preventing 15k iterations to unlock the apply on startup option
+  * Fixed bug where crashes flag is not cleared when doing test of higher frequency at same voltage
+  * Fixed bug where 0 iteration test fails
+
+ -- Lance Colton <lance.colton@gmail.com>  Tue, 31 Jul 2012 22:30:00 -0600
+
+opptimizer-ui (1.2.5) unstable; urgency=low
+  * Can inform user of any new updates
+
+ -- Lance Colton <lance.colton@gmail.com>  Mon, 14 May 2012 22:00:00 -0600
+
+opptimizer-ui (1.2.4) unstable; urgency=low
+  * Fixed haptics without breaking messagehandler
+
+ -- Lance Colton <lance.colton@gmail.com>  Fri, 11 May 2012 12:00:00 -0600
+
+opptimizer-ui (1.2.3) unstable; urgency=low
+  * Benchmark validates output
+
+ -- Lance Colton <lance.colton@gmail.com>  Fri, 11 May 2012 00:00:00 -0600
+
+opptimizer-ui (1.2.2) unstable; urgency=low
+  * Fixed more bugs
+
+ -- Lance Colton <lance.colton@gmail.com>  Thu, 10 May 2012 18:30:00 -0600
+
+opptimizer-ui (1.2.1) unstable; urgency=low
+  * load any on-boot profile as default in ui
+
+ -- Lance Colton <lance.colton@gmail.com>  Wed, 9 May 2012 18:15:00 -0600
+
+opptimizer-ui (1.2.0) unstable; urgency=low
+  * Daemon is able to read/write same database as UI
+
+ -- Lance Colton <lance.colton@gmail.com>  Mon, 7 May 2012 04:15:00 -0600
+
 opptimizer-ui (1.1.0) unstable; urgency=low
   * Added SQL backed storage of benchmark results
   * Added support for 5 different profiles

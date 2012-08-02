@@ -351,6 +351,10 @@ void RenderThread::run()
 {
     double testLength = this->testLength;
 
+    if (testLength == 0){
+        emit renderedImage(0);
+    }
+
     //this function is adapted from http://shootout.alioth.debian.org/u32/program.php?test=mandelbrot&lang=gcc&id=2
     /*
     Copyright © 2004-2012 Brent Fulgham
@@ -451,8 +455,11 @@ void RenderThread::run()
     QString correctHash;
     switch(w)
     {
+    case 0:
+        correctHash = "c7e4dbd300df40813f806dd10fae9547";
+        break;
     case 1000:
-        correctHash = "9beadc69396d01081a98cf5dc057ce89"; //
+        correctHash = "9beadc69396d01081a98cf5dc057ce89";
         break;
     case 2000:
         correctHash = "520440dc03a35e6a4905061229e99a45";

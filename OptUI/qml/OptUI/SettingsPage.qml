@@ -246,10 +246,11 @@ Page{
                     tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
                     console.debug("updated this combo from " + rs.rows.item(0).IterationsPassed + " to " + totalIter)
                     //also validate any rows with same voltage but lower freq
-                    //tx.executeSql('UPDATE History SET IterationsPassed=?, SuspectedCrashes=0 WHERE Frequency<=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
+                    tx.executeSql('UPDATE History SET IterationsPassed=IterationsPassed+?, SuspectedCrashes=0 WHERE Frequency<=? AND Voltage=?;', [ totalIter, sliderFreq.value, sliderVolts.value]);
                 }
             })
             cbTestTotal.value += sliderTest.value;
+            fixOCEnabled();//enable oc on boot if > 15k now
             testCompleteEffect.stop();
         }
         onBadImageOut: {

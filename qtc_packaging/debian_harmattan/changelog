@@ -1,3 +1,10 @@
+opptimizer-ui (1.2.6) unstable; urgency=low
+  * Fixed bug preventing 15k iterations to unlock the apply on startup option
+  * Fixed bug where crashes flag is not cleared when doing test of higher frequency at same voltage
+  * Fixed bug where 0 iteration test fails
+
+ -- Lance Colton <lance.colton@gmail.com>  Tue, 31 Jul 2012 22:30:00 -0600
+
 opptimizer-ui (1.2.5) unstable; urgency=low
   * Can inform user of any new updates
 
