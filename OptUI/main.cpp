@@ -11,7 +11,7 @@ MySettings::MySettings():
 MySettings::~MySettings(){
 }
 
-QString OpptimizerUtils::applySettings(int reqFreq, int reqVolt, bool SREnable, bool changeVolt){
+QString OpptimizerUtils::applySettings(int reqFreq, int reqVolt, bool changeVolt){
     unsigned long newFreq = reqFreq * 1000 * 1000;
     QString reqStr;
     reqStr = QString::number(newFreq);
@@ -63,6 +63,10 @@ void OpptimizerUtils::stopBenchmark()
 void OpptimizerUtils::startCheckForUpdates()
 {
     qDebug() << "checking for updates";
+    if (strUiVersion.toLower() == "unknown" || strKoVersion.toLower() == "unknown"){
+        qDebug() << "aborted update check - don't know what current version is";
+        return;
+    }
     QNetworkRequest *req;
     req = new QNetworkRequest(QUrl("http://talk.maemo.org/showthread.php?t=83357"));
     connect(netManager,SIGNAL(finished(QNetworkReply*)),
@@ -170,10 +174,17 @@ void OpptimizerUtils::refreshStatus(){
 
     QFile file2("/sys/power/sr_vdd1_autocomp");
     if (!file2.open(QIODevice::ReadOnly | QIODevice::Text)){
-        lastSmartReflexStatus = "ERROR";
+        lastSmartReflexVDD1Status = "ERROR";
     }
     else
-        lastSmartReflexStatus = file2.readAll();
+        lastSmartReflexVDD1Status = file2.readAll();
+
+    QFile file3("/sys/power/sr_vdd2_autocomp");
+    if (!file3.open(QIODevice::ReadOnly | QIODevice::Text)){
+        lastSmartReflexVDD2Status = "ERROR";
+    }
+    else
+        lastSmartReflexVDD2Status = file3.readAll();
 
     emit newLogInfo(lastOPPtimizerStatus);
 }
@@ -248,19 +259,29 @@ int OpptimizerUtils::getDefaultVoltage(){
         qDebug() << "default voltage get failed 2";
 }
 
-QString OpptimizerUtils::getSmartReflexStatus(){
-    if(lastSmartReflexStatus == "ERROR")
+QString OpptimizerUtils::getSmartReflexVDD1Status(){
+    if(lastSmartReflexVDD1Status == "ERROR")
         return "ERR";
-    if (lastSmartReflexStatus.left(1) == "1")
+    if (lastSmartReflexVDD1Status.left(1) == "1")
         return "On";
-    if (lastSmartReflexStatus.left(1) == "0")
+    if (lastSmartReflexVDD1Status.left(1) == "0")
         return "Off";
     return "Unknown";
 }
 
-void OpptimizerUtils::setSmartReflexStatus(bool newStatus){
+QString OpptimizerUtils::getSmartReflexVDD2Status(){
+    if(lastSmartReflexVDD2Status == "ERROR")
+        return "ERR";
+    if (lastSmartReflexVDD2Status.left(1) == "1")
+        return "On";
+    if (lastSmartReflexVDD2Status.left(1) == "0")
+        return "Off";
+    return "Unknown";
+}
+
+void OpptimizerUtils::setVDD1SmartReflexStatus(bool newStatus){
     QString reqStr = newStatus ? "1" : "0";
-    qDebug() << "setting sr to " + reqStr;
+    qDebug() << "setting sr1 to " + reqStr;
     QFile file("/sys/power/sr_vdd1_autocomp");
     if (! file.open(QIODevice::WriteOnly | QIODevice::Text)){
         qDebug() << "/sys/power/sr_vdd1_autocomp open failed!!";
@@ -272,6 +293,19 @@ void OpptimizerUtils::setSmartReflexStatus(bool newStatus){
     file.close();
 }
 
+void OpptimizerUtils::setVDD2SmartReflexStatus(bool newStatus){
+    QString reqStr = newStatus ? "1" : "0";
+    qDebug() << "setting sr2 to " + reqStr;
+    QFile file("/sys/power/sr_vdd2_autocomp");
+    if (! file.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "/sys/power/sr_vdd1_autocomp open failed!!";
+        //qDebug() << file.errorString();
+        //return file.errorString(); // this will never fail anyways. probably :)
+    }
+    QTextStream out(&file);
+    out << reqStr;
+    file.close();
+}
 
 QString OpptimizerUtils::getMaxFreq(){
     if(lastOPPtimizerStatus == "ERROR")

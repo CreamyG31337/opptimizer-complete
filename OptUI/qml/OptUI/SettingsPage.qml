@@ -58,7 +58,8 @@ Page{
         console.debug("SettingsPage reloading...")
         fnBlockEvents();//don't save anything while loading
         swCustomVolts.checked = objQSettings.getValue("/settings/" + selectedProfile + "/CustomVolts/enabled",false)
-        swSmartReflex.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex/enabled",true)
+        swSmartReflex1.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex1/enabled",true)
+        swSmartReflex2.checked = objQSettings.getValue("/settings/" + selectedProfile + "/SmartReflex2/enabled",true)
         sliderVolts.value = objQSettings.getValue("/settings/" + selectedProfile + "/CPUVolts/value", objOpptimizerUtils.getDefaultVoltage())
         checkHistory();
         fixOCEnabled();
@@ -156,8 +157,9 @@ Page{
 
     function applySettings(){
         var strStatus;
-        objOpptimizerUtils.setSmartReflexStatus(swSmartReflex.checked);
-        strStatus = objOpptimizerUtils.applySettings(cbFreq.value, cbVolts.value, swSmartReflex.checked, swCustomVolts.checked);
+        objOpptimizerUtils.setVDD1SmartReflexStatus(swSmartReflex1.checked);
+        objOpptimizerUtils.setVDD2SmartReflexStatus(swSmartReflex2.checked);
+        strStatus = objOpptimizerUtils.applySettings(cbFreq.value, cbVolts.value, swCustomVolts.checked);
         if (strStatus.indexOf("Updated") === -1){//some sort of error
             if (strStatus.indexOf("Permission denied") > -1)
                 strStatus = "Permission error - Please reinstall this package using /usr/sbin/incept."
@@ -233,7 +235,8 @@ Page{
             }
             objQSettings.setValue("/settings/" + selectedProfile + "/CPUVolts/value",sliderVolts.value)
             objQSettings.setValue("/settings/" + selectedProfile + "/CPUFreq/value",sliderFreq.value)
-            objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex/enabled",swSmartReflex.checked)
+            objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex1/enabled",swSmartReflex1.checked)
+            objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex2/enabled",swSmartReflex2.checked)
             objQSettings.setValue("/settings/" + selectedProfile + "/CustomVolts/enabled",swCustomVolts.checked)
             var db = openDatabaseSync("OPPtimizer", "1.0", "OPPtimizer History", 1000000);
             var totalIter = 0
@@ -380,7 +383,7 @@ Page{
         }
 
         Row {
-            id: rowSR
+            id: rowSR1
             anchors{
                 topMargin: 10
                 top: rowCustomVoltage.bottom
@@ -388,19 +391,48 @@ Page{
                 left: parent.left
             }
             Label {
-                width: rowSR.width - rowSR.spacing - swSmartReflex.width
-                height: swSmartReflex.height
-                text: "SmartReflex"
+                width: rowSR1.width - rowSR1.spacing - swSmartReflex1.width
+                height: swSmartReflex1.height
+                text: "SmartReflex VDD1 (CPU)"
             }
             Switch {
-                id: swSmartReflex
+                id: swSmartReflex1
                 checked: false
                 onCheckedChanged:{
                     if (!blockEvents.running) {
-                        objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex/enabled",swSmartReflex.checked)
-                        objOpptimizerUtils.setSmartReflexStatus(swSmartReflex.checked);
-                        if (!swSmartReflex.checked){
-                            infoMessageBanner.text = "SmartReflex will be completely disabled for the CPU. The CPU will use quite a bit more power.";
+                        objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex1/enabled",swSmartReflex1.checked)
+                        objOpptimizerUtils.setVDD1SmartReflexStatus(swSmartReflex1.checked);
+                        if (!swSmartReflex1.checked){
+                            infoMessageBanner.text = "SmartReflex will be completely disabled for the CPU. The CPU will use a bit more power.";
+                            infoMessageBanner.timerShowTime = 3000;
+                            infoMessageBanner.show();
+                        }
+                    }
+                }
+            }
+        }
+        Row {
+            id: rowSR2
+            anchors{
+                topMargin: 10
+                top: rowSR1.bottom
+                right: parent.right
+                left: parent.left
+            }
+            Label {
+                width: rowSR2.width - rowSR2.spacing - swSmartReflex2.width
+                height: swSmartReflex2.height
+                text: "SmartReflex VDD2 (GPU)"
+            }
+            Switch {
+                id: swSmartReflex2
+                checked: false
+                onCheckedChanged:{
+                    if (!blockEvents.running) {
+                        objQSettings.setValue("/settings/" + selectedProfile + "/SmartReflex2/enabled",swSmartReflex2.checked)
+                        objOpptimizerUtils.setVDD2SmartReflexStatus(swSmartReflex2.checked);
+                        if (!swSmartReflex2.checked){
+                            infoMessageBanner.text = "SmartReflex will be completely disabled for the GPU. The GPU will use a bit more power.";
                             infoMessageBanner.timerShowTime = 3000;
                             infoMessageBanner.show();
                         }
@@ -412,7 +444,7 @@ Page{
         Label {
             id:lblFreq
             anchors{
-                top: rowSR.bottom
+                top: rowSR2.bottom
                 left: parent.left
                 topMargin: 20
             }

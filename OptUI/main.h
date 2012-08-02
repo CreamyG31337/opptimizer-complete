@@ -67,12 +67,14 @@ public:
     Q_INVOKABLE QString getModuleVersion();
     Q_INVOKABLE QString getMaxVoltage();
     Q_INVOKABLE int getDefaultVoltage();
-    Q_INVOKABLE QString getSmartReflexStatus();
-    Q_INVOKABLE void setSmartReflexStatus(bool newStatus);
+    Q_INVOKABLE QString getSmartReflexVDD1Status();
+    Q_INVOKABLE QString getSmartReflexVDD2Status();
+    Q_INVOKABLE void setVDD1SmartReflexStatus(bool newStatus);
+    Q_INVOKABLE void setVDD2SmartReflexStatus(bool newStatus);
     Q_INVOKABLE QString getMaxFreq();
     Q_INVOKABLE void refreshStatus();
     Q_INVOKABLE QString returnRawSettings();
-    Q_INVOKABLE QString applySettings(int reqFreq, int reqVolt, bool SREnable, bool changeVolt);
+    Q_INVOKABLE QString applySettings(int reqFreq, int reqVolt, bool changeVolt);
     Q_INVOKABLE void testSettings(int testLength);
     Q_INVOKABLE void stopBenchmark();
     Q_INVOKABLE void startCheckForUpdates();
@@ -82,7 +84,8 @@ public:
     Q_INVOKABLE void setKoVersionString(QString versionString);
 private:
     QString lastOPPtimizerStatus;
-    QString lastSmartReflexStatus;
+    QString lastSmartReflexVDD1Status;
+    QString lastSmartReflexVDD2Status;
     RenderThread thread;
     QNetworkAccessManager *netManager;
     QString strUiVersion;

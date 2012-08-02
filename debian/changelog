@@ -1,3 +1,9 @@
+opptimizer-ui (1.2.7) unstable; urgency=low
+  * Support for VDD2 / GPU settings (only smart reflex for now)
+  * Fixed bug where incorrectly installed OPPtimizer always thinks there are updates available
+
+ -- Lance Colton <lance.colton@gmail.com>  Wed, 1 Aug 2012 23:30:00 -0600
+
 opptimizer-ui (1.2.6) unstable; urgency=low
   * Fixed bug preventing 15k iterations to unlock the apply on startup option
   * Fixed bug where crashes flag is not cleared when doing test of higher frequency at same voltage

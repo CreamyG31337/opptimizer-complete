@@ -22,7 +22,8 @@ Page {
         objOpptimizerUtils.refreshStatus();
         lblModuleVal.text = objOpptimizerUtils.getModuleVersion();
         lblVoltVal.text = objOpptimizerUtils.getMaxVoltage();
-        lblSRVal.text = objOpptimizerUtils.getSmartReflexStatus();
+        lblSR1Val.text = objOpptimizerUtils.getSmartReflexVDD1Status();
+        lblSR2Val.text = objOpptimizerUtils.getSmartReflexVDD2Status();
         lblFreqVal.text = objOpptimizerUtils.getMaxFreq();
         myBusyInd.running = false;
         myBusyInd.visible = false;
@@ -79,18 +80,37 @@ Page {
         }
 
         Label{
-            id: lblSRText
+            id: lblSR1Text
             anchors{
                 left: parent.left
                 top: lblVoltVal.bottom
             }
-            text: "SmartReflex status: "
+            text: "SmartReflex VDD1 status: "
         }
 
         Label{
-            id: lblSRVal
+            id: lblSR1Val
             anchors{
                 top: lblVoltVal.bottom
+                right: parent.right
+            }
+            text: "Unknown"
+            horizontalAlignment: Text.AlignRight
+        }
+
+        Label{
+            id: lblSR2Text
+            anchors{
+                left: parent.left
+                top: lblSR1Val.bottom
+            }
+            text: "SmartReflex VDD2 status: "
+        }
+
+        Label{
+            id: lblSR2Val
+            anchors{
+                top: lblSR1Val.bottom
                 right: parent.right
             }
             text: "Unknown"
@@ -101,7 +121,7 @@ Page {
             id: lblModuleText
             anchors{
                 left: parent.left
-                top: lblSRVal.bottom
+                top: lblSR2Val.bottom
             }
             text: "Kernel module version: "
         }
@@ -109,12 +129,13 @@ Page {
         Label{
             id: lblModuleVal
             anchors{
-                top: lblSRVal.bottom
+                top: lblSR2Val.bottom
                 right: parent.right
             }
             text: "Unknown"
             horizontalAlignment: Text.AlignRight
         }
+
         Button{
             id: btnRefresh
             anchors{

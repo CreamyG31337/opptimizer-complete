@@ -56,9 +56,10 @@ int main(int argc, char *argv[])
     int requestedFrequency = objQsettings.value("/settings/" + strReqestedProfile + "/CPUFreq/value",-1).toInt();
     int requestedVoltage = objQsettings.value("/settings/" + strReqestedProfile + "/CPUVolts/value",-1).toInt();
     bool reqCustomVoltage = objQsettings.value("/settings/" + strReqestedProfile + "/CustomVolts/enabled",true).toBool();
-    bool reqSmartReflexStatus = objQsettings.value("/settings/" + strReqestedProfile + "/SmartReflex/enabled",true).toBool();
+    bool reqVDD1SmartReflexStatus = objQsettings.value("/settings/" + strReqestedProfile + "/SmartReflex1/enabled",true).toBool();
+    bool reqVDD2SmartReflexStatus = objQsettings.value("/settings/" + strReqestedProfile + "/SmartReflex2/enabled",true).toBool();
 
-    qDebug() << "going to set FREQ/VOLTS/CustomVolts/SR: " << requestedFrequency << " " << requestedVoltage << " " << reqCustomVoltage << " " << reqSmartReflexStatus;
+    qDebug() << "going to set FREQ/VOLTS/CustomVolts/SR1/SR2: " << requestedFrequency << " " << requestedVoltage << " " << reqCustomVoltage << " " << reqVDD1SmartReflexStatus << reqVDD2SmartReflexStatus;
 
     //load database
     QDeclarativeEngine engine;
@@ -140,16 +141,27 @@ int main(int argc, char *argv[])
     db.close();
 
     //do overclock
-    QFile file("/sys/power/sr_vdd1_autocomp");
-    if (! file.open(QIODevice::WriteOnly | QIODevice::Text)){
+    QFile file0("/sys/power/sr_vdd1_autocomp");
+    if (! file0.open(QIODevice::WriteOnly | QIODevice::Text)){
         qDebug() << "/sys/power/sr_vdd1_autocomp open failed!!";
-        qDebug() << file.errorString();
+        qDebug() << file0.errorString();
         return -1;
     }
-    QString reqSRStr = reqSmartReflexStatus ? "1" : "0";
-    QTextStream out(&file);
-    out << reqSRStr;
-    file.close();
+    QString reqSRStr0 = reqVDD1SmartReflexStatus ? "1" : "0";
+    QTextStream out0(&file0);
+    out0 << reqSRStr0;
+    file0.close();
+
+    QFile file1("/sys/power/sr_vdd2_autocomp");
+    if (! file1.open(QIODevice::WriteOnly | QIODevice::Text)){
+        qDebug() << "/sys/power/sr_vdd2_autocomp open failed!!";
+        qDebug() << file1.errorString();
+        return -1;
+    }
+    QString reqSRStr1 = reqVDD2SmartReflexStatus ? "1" : "0";
+    QTextStream out1(&file1);
+    out1 << reqSRStr1;
+    file1.close();
 
     QFile file2("/proc/opptimizer");
     if (! file2.open(QIODevice::WriteOnly | QIODevice::Text)){
